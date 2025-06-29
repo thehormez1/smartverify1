@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -37,10 +36,12 @@
 </head>
 <body>
   <h1>نظام التحقق من الدعوات</h1>
+
   <div id="password-box">
     <input type="password" id="password" placeholder="ادخل كلمة المرور" />
     <button onclick="checkPassword()">دخول</button>
   </div>
+
   <div id="result" class="status" style="display:none;">جارٍ التحقق...</div>
 
   <script>
@@ -65,7 +66,7 @@
         document.getElementById('result').textContent = "❌ رقم الدعوة غير موجود";
         document.getElementById('result').className = "status error";
       } else {
-        fetch(`https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec?code=${code}`)
+        fetch(`https://script.google.com/macros/s/AKfycbwMLYNpCdEQAiEwQHb2lRcoBkP0CtktuPDbFWrHQOPHUAIzKmQmFDzQ1cZyr4nhQvZLEw/exec?code=${code}`)
           .then(res => res.text())
           .then(text => {
             const result = document.getElementById('result');
