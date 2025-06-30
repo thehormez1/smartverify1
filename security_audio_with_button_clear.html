@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>شاشة التحقق الأمنية</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #222;
+      color: white;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    #qr-reader {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+    }
+    .status {
+      margin-top: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      padding: 20px;
+      border-radius: 12px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    #start-button {
+      font-size: 22px;
+      padding: 12px 20px;
+      margin-top: 40px;
+      background-color: #00aaff;
+      border: none;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+  <h1>شاشة التحقق الأمنية</h1>
+  <p>اضغط على الزر لتفعيل الصوت وبدء المسح</p>
+  <button id="start-button">✅ اضغط هنا لبدء التحقق</button>
+  <div id="qr-reader" style="display:none;"></div>
+  <div id="result" class="status" style="display:none;"></div>
+
+  <!-- أصوات -->
+  <audio id="success-sound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3"></audio>
+  <audio id="error-sound" preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-bass-alert-947.mp3"></audio>
+
+  <script>
+    const resultBox = document.getElementById("result");
+    const successSound = document.getElementById("success-sound");
+    const errorSound = document.getElementById("error-sound");
+    const startButton = document.getElementById("start-button");
+    let scanner;
+
+    startButton.addEventListener("click", () => {
+      // إجبار المتصفح على تفعيل الصوت عبر تشغيل سريع وإيقاف
+      successSound.play().then(() => successSound.pause());
+      errorSound.play().then(() => errorSound.pause());
+      // إخفاء الزر وبدء الماسح
+      startButton.style.display = "none";
+      document.getElementById("qr-reader").style.display = "block";
+      startScanner();
+    });
+
+    function showResult(text, isSuccess) {
+      resultBox.style.display = "block";
+      resultBox.className = "status " + (isSuccess ? "success" : "error");
+      resultBox.textContent = text;
+      if (isSuccess) {
+        successSound.currentTime = 0;
+        successSound.play();
+      } else {
+        errorSound.currentTime = 0;
+        errorSound.play();
+      }
+    }
+
+    function processQRCode(scannedUrl) {
+      scanner.pause();
+      try {
+        const url = new URL(scannedUrl);
+        const code = new URLSearchParams(url.search).get("code");
+        if (!code) {
+          showResult("❌ الباركود غير صالح", false);
+          resumeScanner();
+          return;
+        }
+
+        fetch(`https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec?code=${code}`)
+          .then(res => res.text())
+          .then(text => {
+            if (text.includes("صالح")) {
+              showResult("✅ " + text, true);
+            } else {
+              showResult("❌ " + text, false);
+            }
+            resumeScanner();
+          })
+          .catch(() => {
+            showResult("⚠️ فشل الاتصال بالخادم", false);
+            resumeScanner();
+          });
+
+      } catch {
+        showResult("❌ رابط غير صحيح", false);
+        resumeScanner();
+      }
+    }
+
+    function resumeScanner() {
+      setTimeout(() => {
+        resultBox.style.display = "none";
+        scanner.resume();
+      }, 5000);
+    }
+
+    function startScanner() {
+      scanner = new Html5Qrcode("qr-reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        processQRCode,
+        error => {}
+      );
+    }
+  </script>
+</body>
+</html>
