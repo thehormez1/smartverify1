@@ -2,94 +2,119 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>التحقق من الدعوة</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>شاشة التحقق الأمنية</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
+      background-color: #222;
+      color: white;
       text-align: center;
-      padding: 50px;
+      padding: 30px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    #qr-reader {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
     }
     .status {
-      font-size: 28px;
-      font-weight: bold;
       margin-top: 20px;
+      font-size: 24px;
+      font-weight: bold;
       padding: 20px;
-      border-radius: 10px;
-      display: inline-block;
+      border-radius: 12px;
     }
     .success {
       background-color: #d4edda;
       color: #155724;
-      border: 2px solid #c3e6cb;
     }
     .error {
       background-color: #f8d7da;
       color: #721c24;
-      border: 2px solid #f5c6cb;
-    }
-    #password-box {
-      margin-bottom: 20px;
     }
   </style>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
-  <h1>نظام التحقق من الدعوات</h1>
+  <h1>شاشة التحقق الأمنية</h1>
+  <p>يرجى توجيه الباركود نحو الكاميرا</p>
+  <div id="qr-reader"></div>
+  <div id="result" class="status" style="display:none;"></div>
 
-  <div id="password-box">
-    <input type="password" id="password" placeholder="ادخل كلمة المرور" />
-    <button onclick="checkPassword()">دخول</button>
-  </div>
-
-  <div id="result" class="status" style="display:none;">جارٍ التحقق...</div>
+  <!-- أصوات -->
+  <audio id="success-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-reward-952.mp3"></audio>
+  <audio id="error-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
 
   <script>
-    const correctPassword = "ali1234";
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
+    const resultBox = document.getElementById("result");
+    const successSound = document.getElementById("success-sound");
+    const errorSound = document.getElementById("error-sound");
+    let scanner;
 
-    function checkPassword() {
-      const entered = document.getElementById("password").value;
-      if (entered === correctPassword) {
-        sessionStorage.setItem("auth", "true");
-        document.getElementById("password-box").style.display = "none";
-        document.getElementById("result").style.display = "inline-block";
-        startVerification();
+    function showResult(text, isSuccess) {
+      resultBox.style.display = "block";
+      resultBox.className = "status " + (isSuccess ? "success" : "error");
+      resultBox.textContent = text;
+
+      if (isSuccess) {
+        successSound.play();
       } else {
-        alert("❌ كلمة المرور غير صحيحة");
+        errorSound.play();
       }
     }
 
-    function startVerification() {
-      if (!code) {
-        document.getElementById('result').textContent = "❌ رقم الدعوة غير موجود";
-        document.getElementById('result').className = "status error";
-      } else {
+    function processQRCode(scannedUrl) {
+      scanner.pause(); // إيقاف الماسح مؤقتًا بعد القراءة
+
+      try {
+        const url = new URL(scannedUrl);
+        const code = new URLSearchParams(url.search).get("code");
+        if (!code) {
+          showResult("❌ الباركود غير صالح", false);
+          resumeScanner();
+          return;
+        }
+
         fetch(`https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec?code=${code}`)
           .then(res => res.text())
           .then(text => {
-            const result = document.getElementById('result');
-            result.textContent = text;
             if (text.includes("صالح")) {
-              result.className = "status success";
+              showResult("✅ " + text, true);
             } else {
-              result.className = "status error";
+              showResult("❌ " + text, false);
             }
+            resumeScanner();
           })
           .catch(() => {
-            document.getElementById('result').textContent = "⚠️ حدث خطأ في الاتصال بالخادم";
-            document.getElementById('result').className = "status error";
+            showResult("⚠️ فشل الاتصال بالخادم", false);
+            resumeScanner();
           });
+
+      } catch {
+        showResult("❌ رابط غير صحيح", false);
+        resumeScanner();
       }
     }
 
-    if (sessionStorage.getItem("auth") === "true") {
-      document.getElementById("password-box").style.display = "none";
-      document.getElementById("result").style.display = "inline-block";
-      startVerification();
+    function resumeScanner() {
+      setTimeout(() => {
+        resultBox.style.display = "none";
+        scanner.resume();
+      }, 5000); // استئناف الماسح بعد 5 ثوانٍ
     }
+
+    scanner = new Html5Qrcode("qr-reader");
+    scanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      processQRCode,
+      error => { /* تجاهل أخطاء المسح */ }
+    );
   </script>
 </body>
 </html>
