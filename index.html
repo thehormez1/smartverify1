@@ -37,24 +37,13 @@
       background-color: #f8d7da;
       color: #721c24;
     }
-    #start-button {
-      font-size: 22px;
-      padding: 12px 20px;
-      margin-top: 40px;
-      background-color: #00aaff;
-      border: none;
-      color: white;
-      border-radius: 10px;
-      cursor: pointer;
-    }
   </style>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
   <h1>شاشة التحقق الأمنية</h1>
-  <p>يرجى الضغط على الزر أدناه لتفعيل الصوت وبدء الماسح</p>
-  <button id="start-button">ابدأ التحقق</button>
-  <div id="qr-reader" style="display:none;"></div>
+  <p>يرجى توجيه الباركود نحو الكاميرا</p>
+  <div id="qr-reader"></div>
   <div id="result" class="status" style="display:none;"></div>
 
   <!-- أصوات -->
@@ -65,30 +54,13 @@
     const resultBox = document.getElementById("result");
     const successSound = document.getElementById("success-sound");
     const errorSound = document.getElementById("error-sound");
-    const startButton = document.getElementById("start-button");
     let scanner;
-
-    startButton.addEventListener("click", () => {
-      successSound.play().catch(() => {});
-      errorSound.play().catch(() => {});
-      startButton.style.display = "none";
-      document.getElementById("qr-reader").style.display = "block";
-      startScanner();
-    });
-
-    function extractCode(input) {
-      try {
-        const url = new URL(input);
-        return new URLSearchParams(url.search).get("code");
-      } catch {
-        return input.trim(); // إذا لم يكن رابط، نعتبره الكود نفسه
-      }
-    }
 
     function showResult(text, isSuccess) {
       resultBox.style.display = "block";
       resultBox.className = "status " + (isSuccess ? "success" : "error");
       resultBox.textContent = text;
+
       if (isSuccess) {
         successSound.play();
       } else {
@@ -96,48 +68,53 @@
       }
     }
 
-    function processQRCode(scannedData) {
-      scanner.pause();
-      const code = extractCode(scannedData);
+    function processQRCode(scannedUrl) {
+      scanner.pause(); // إيقاف الماسح مؤقتًا بعد القراءة
 
-      if (!code || !code.startsWith("INV-")) {
-        showResult("❌ الكود غير صالح", false);
+      try {
+        const url = new URL(scannedUrl);
+        const code = new URLSearchParams(url.search).get("code");
+        if (!code) {
+          showResult("❌ الباركود غير صالح", false);
+          resumeScanner();
+          return;
+        }
+
+        fetch(`https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec?code=${code}`)
+          .then(res => res.text())
+          .then(text => {
+            if (text.includes("صالح")) {
+              showResult("✅ " + text, true);
+            } else {
+              showResult("❌ " + text, false);
+            }
+            resumeScanner();
+          })
+          .catch(() => {
+            showResult("⚠️ فشل الاتصال بالخادم", false);
+            resumeScanner();
+          });
+
+      } catch {
+        showResult("❌ رابط غير صحيح", false);
         resumeScanner();
-        return;
       }
-
-      fetch(`https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec?code=${code}`)
-        .then(res => res.text())
-        .then(text => {
-          if (text.includes("صالح")) {
-            showResult("✅ " + text, true);
-          } else {
-            showResult("❌ " + text, false);
-          }
-          resumeScanner();
-        })
-        .catch(() => {
-          showResult("⚠️ فشل الاتصال بالخادم", false);
-          resumeScanner();
-        });
     }
 
     function resumeScanner() {
       setTimeout(() => {
         resultBox.style.display = "none";
         scanner.resume();
-      }, 5000);
+      }, 5000); // استئناف الماسح بعد 5 ثوانٍ
     }
 
-    function startScanner() {
-      scanner = new Html5Qrcode("qr-reader");
-      scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        processQRCode,
-        error => {}
-      );
-    }
+    scanner = new Html5Qrcode("qr-reader");
+    scanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      processQRCode,
+      error => { /* تجاهل أخطاء المسح */ }
+    );
   </script>
 </body>
 </html>
