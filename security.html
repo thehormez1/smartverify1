@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -47,8 +48,7 @@
 
   <script>
     const resultBox = document.getElementById("result");
-    let lastScannedCode = "";
-    let lastScanTime = 0;
+    let scanner;
 
     function showResult(text, isSuccess) {
       resultBox.style.display = "block";
@@ -57,18 +57,14 @@
     }
 
     function processQRCode(scannedUrl) {
-      const now = Date.now();
-      if (scannedUrl === lastScannedCode && (now - lastScanTime) < 5000) {
-        return; // تجاهل التكرار خلال 5 ثوانٍ
-      }
-      lastScannedCode = scannedUrl;
-      lastScanTime = now;
+      scanner.pause(); // إيقاف الماسح مؤقتًا بعد القراءة
 
       try {
         const url = new URL(scannedUrl);
         const code = new URLSearchParams(url.search).get("code");
         if (!code) {
           showResult("❌ الباركود غير صالح", false);
+          resumeScanner();
           return;
         }
 
@@ -80,21 +76,32 @@
             } else {
               showResult("❌ " + text, false);
             }
+            resumeScanner();
           })
           .catch(() => {
             showResult("⚠️ فشل الاتصال بالخادم", false);
+            resumeScanner();
           });
 
       } catch {
         showResult("❌ رابط غير صحيح", false);
+        resumeScanner();
       }
     }
 
-    new Html5Qrcode("qr-reader").start(
+    function resumeScanner() {
+      setTimeout(() => {
+        resultBox.style.display = "none";
+        scanner.resume();
+      }, 5000); // استئناف الماسح بعد 5 ثوانٍ
+    }
+
+    scanner = new Html5Qrcode("qr-reader");
+    scanner.start(
       { facingMode: "environment" },
       { fps: 10, qrbox: 250 },
       processQRCode,
-      error => { /* تجاهل الأخطاء البصرية */ }
+      error => { /* تجاهل أخطاء المسح */ }
     );
   </script>
 </body>
