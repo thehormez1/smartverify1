@@ -37,13 +37,24 @@
       background-color: #f8d7da;
       color: #721c24;
     }
+    #start-button {
+      font-size: 22px;
+      padding: 12px 20px;
+      margin-top: 40px;
+      background-color: #00aaff;
+      border: none;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+    }
   </style>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
   <h1>شاشة التحقق الأمنية</h1>
-  <p>يرجى توجيه الباركود نحو الكاميرا</p>
-  <div id="qr-reader"></div>
+  <p>يرجى الضغط على الزر أدناه لتفعيل الصوت وبدء الماسح</p>
+  <button id="start-button">ابدأ التحقق</button>
+  <div id="qr-reader" style="display:none;"></div>
   <div id="result" class="status" style="display:none;"></div>
 
   <!-- أصوات -->
@@ -54,13 +65,22 @@
     const resultBox = document.getElementById("result");
     const successSound = document.getElementById("success-sound");
     const errorSound = document.getElementById("error-sound");
+    const startButton = document.getElementById("start-button");
     let scanner;
+
+    startButton.addEventListener("click", () => {
+      // محاولة تشغيل الصوت لتفعيل إذن التشغيل
+      successSound.play().catch(() => {});
+      errorSound.play().catch(() => {});
+      startButton.style.display = "none";
+      document.getElementById("qr-reader").style.display = "block";
+      startScanner();
+    });
 
     function showResult(text, isSuccess) {
       resultBox.style.display = "block";
       resultBox.className = "status " + (isSuccess ? "success" : "error");
       resultBox.textContent = text;
-
       if (isSuccess) {
         successSound.play();
       } else {
@@ -69,7 +89,7 @@
     }
 
     function processQRCode(scannedUrl) {
-      scanner.pause(); // إيقاف الماسح مؤقتًا بعد القراءة
+      scanner.pause();
 
       try {
         const url = new URL(scannedUrl);
@@ -105,16 +125,18 @@
       setTimeout(() => {
         resultBox.style.display = "none";
         scanner.resume();
-      }, 5000); // استئناف الماسح بعد 5 ثوانٍ
+      }, 5000);
     }
 
-    scanner = new Html5Qrcode("qr-reader");
-    scanner.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      processQRCode,
-      error => { /* تجاهل أخطاء المسح */ }
-    );
+    function startScanner() {
+      scanner = new Html5Qrcode("qr-reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        processQRCode,
+        error => {}
+      );
+    }
   </script>
 </body>
 </html>
