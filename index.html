@@ -69,13 +69,21 @@
     let scanner;
 
     startButton.addEventListener("click", () => {
-      // محاولة تشغيل الصوت لتفعيل إذن التشغيل
       successSound.play().catch(() => {});
       errorSound.play().catch(() => {});
       startButton.style.display = "none";
       document.getElementById("qr-reader").style.display = "block";
       startScanner();
     });
+
+    function extractCode(input) {
+      try {
+        const url = new URL(input);
+        return new URLSearchParams(url.search).get("code");
+      } catch {
+        return input.trim(); // إذا لم يكن رابط، نعتبره الكود نفسه
+      }
+    }
 
     function showResult(text, isSuccess) {
       resultBox.style.display = "block";
@@ -88,37 +96,30 @@
       }
     }
 
-    function processQRCode(scannedUrl) {
+    function processQRCode(scannedData) {
       scanner.pause();
+      const code = extractCode(scannedData);
 
-      try {
-        const url = new URL(scannedUrl);
-        const code = new URLSearchParams(url.search).get("code");
-        if (!code) {
-          showResult("❌ الباركود غير صالح", false);
-          resumeScanner();
-          return;
-        }
-
-        fetch(`https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec?code=${code}`)
-          .then(res => res.text())
-          .then(text => {
-            if (text.includes("صالح")) {
-              showResult("✅ " + text, true);
-            } else {
-              showResult("❌ " + text, false);
-            }
-            resumeScanner();
-          })
-          .catch(() => {
-            showResult("⚠️ فشل الاتصال بالخادم", false);
-            resumeScanner();
-          });
-
-      } catch {
-        showResult("❌ رابط غير صحيح", false);
+      if (!code || !code.startsWith("INV-")) {
+        showResult("❌ الكود غير صالح", false);
         resumeScanner();
+        return;
       }
+
+      fetch(`https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec?code=${code}`)
+        .then(res => res.text())
+        .then(text => {
+          if (text.includes("صالح")) {
+            showResult("✅ " + text, true);
+          } else {
+            showResult("❌ " + text, false);
+          }
+          resumeScanner();
+        })
+        .catch(() => {
+          showResult("⚠️ فشل الاتصال بالخادم", false);
+          resumeScanner();
+        });
     }
 
     function resumeScanner() {
