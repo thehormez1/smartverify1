@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>شاشة التحقق الأمنية</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #222;
+      color: white;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    #qr-reader {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+    }
+    .status {
+      margin-top: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      padding: 20px;
+      border-radius: 12px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+  <h1>شاشة التحقق الأمنية</h1>
+  <p>يرجى توجيه الباركود نحو الكاميرا</p>
+  <div id="qr-reader"></div>
+  <div id="result" class="status" style="display:none;"></div>
+
+  <script>
+    const resultBox = document.getElementById("result");
+
+    function showResult(text, isSuccess) {
+      resultBox.style.display = "block";
+      resultBox.className = "status " + (isSuccess ? "success" : "error");
+      resultBox.textContent = text;
+    }
+
+    function processQRCode(scannedUrl) {
+      try {
+        const url = new URL(scannedUrl);
+        const code = new URLSearchParams(url.search).get("code");
+        if (!code) {
+          showResult("❌ الباركود غير صالح", false);
+          return;
+        }
+
+        fetch(`https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec?code=${code}`)
+          .then(res => res.text())
+          .then(text => {
+            if (text.includes("صالح")) {
+              showResult("✅ " + text, true);
+            } else {
+              showResult("❌ " + text, false);
+            }
+          })
+          .catch(() => {
+            showResult("⚠️ فشل الاتصال بالخادم", false);
+          });
+
+      } catch {
+        showResult("❌ رابط غير صحيح", false);
+      }
+    }
+
+    new Html5Qrcode("qr-reader").start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      processQRCode,
+      error => { /* تجاهل الأخطاء البصرية */ }
+    );
+  </script>
+</body>
+</html>
