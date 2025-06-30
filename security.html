@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -48,6 +47,8 @@
 
   <script>
     const resultBox = document.getElementById("result");
+    let lastScannedCode = "";
+    let lastScanTime = 0;
 
     function showResult(text, isSuccess) {
       resultBox.style.display = "block";
@@ -56,6 +57,13 @@
     }
 
     function processQRCode(scannedUrl) {
+      const now = Date.now();
+      if (scannedUrl === lastScannedCode && (now - lastScanTime) < 5000) {
+        return; // تجاهل التكرار خلال 5 ثوانٍ
+      }
+      lastScannedCode = scannedUrl;
+      lastScanTime = now;
+
       try {
         const url = new URL(scannedUrl);
         const code = new URLSearchParams(url.search).get("code");
