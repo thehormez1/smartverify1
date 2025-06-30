@@ -46,14 +46,26 @@
   <div id="qr-reader"></div>
   <div id="result" class="status" style="display:none;"></div>
 
+  <!-- أصوات -->
+  <audio id="success-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-reward-952.mp3"></audio>
+  <audio id="error-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
+
   <script>
     const resultBox = document.getElementById("result");
+    const successSound = document.getElementById("success-sound");
+    const errorSound = document.getElementById("error-sound");
     let scanner;
 
     function showResult(text, isSuccess) {
       resultBox.style.display = "block";
       resultBox.className = "status " + (isSuccess ? "success" : "error");
       resultBox.textContent = text;
+
+      if (isSuccess) {
+        successSound.play();
+      } else {
+        errorSound.play();
+      }
     }
 
     function processQRCode(scannedUrl) {
