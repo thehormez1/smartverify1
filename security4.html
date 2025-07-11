@@ -136,7 +136,7 @@
       scanner = new Html5Qrcode("qr-reader");
       scanner.start(
         { facingMode: "environment" },
-        { fps: 40, qrbox: 400 },
+        { fps: 30, qrbox: 300 },
         processQRCode,
         error => {}
       );
