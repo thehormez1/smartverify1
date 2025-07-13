@@ -1,11 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة تحكم هورميز (تحديث مباشر)</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+  <title>لوحة تحكم هورميز (API مباشر)</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; margin: 0; padding: 2rem; }
     h1 { text-align: center; margin-bottom: 2rem; }
@@ -29,16 +26,13 @@
     <div class="card pending">⚪ المعلقة: <span id="pending">--</span></div>
     <div class="card scanned">🔵 الممسوحة: <span id="scanned">--</span></div>
   </div>
-  <script>
-    const sheetID = "17704GyWItEe5PeHWfN0nIpfoMbviL6JKxVH902QUxfo";
-    const sheetName = "Sheet1";
-    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
 
-    Papa.parse(url, {
-      download: true,
-      header: true,
-      complete: function(results) {
-        const data = results.data;
+  <script>
+    const apiURL = "https://script.google.com/macros/s/AKfycbyVGMX77kKSEU0ObkSfj0FE3mmwsm4NMcoAm0dvC48b9nzJg5fSqqUJTK2pO5eELBhpPg/exec";
+
+    fetch(apiURL)
+      .then(response => response.json())
+      .then(data => {
         let accepted = 0, rejected = 0, attended = 0, scanned = 0;
 
         data.forEach(row => {
@@ -59,8 +53,10 @@
         document.getElementById("scanned").textContent = scanned;
         document.getElementById("pending").textContent = pending;
         document.getElementById("remaining").textContent = remaining;
-      }
-    });
+      })
+      .catch(error => {
+        console.error("فشل في جلب البيانات:", error);
+      });
   </script>
 </body>
 </html>
