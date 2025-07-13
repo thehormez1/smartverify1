@@ -23,11 +23,17 @@
     }
     .success { background-color: #2e7d32; }
     .error { background-color: #c62828; }
+    .scanned-code {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: #aaa;
+    }
   </style>
 </head>
 <body>
   <h1>مسح دعوة الضيف</h1>
   <div id="reader"></div>
+  <div class="scanned-code" id="scanned-code"></div>
   <div id="result" class="status"></div>
 
   <script>
@@ -40,11 +46,14 @@
     }
 
     function updateGuest(code) {
-      console.log("Scanned Code:", code); // إضافة لتتبع الكود الممسوح
-      fetch(`${sheetApi}?code=${encodeURIComponent(code)}`)
+      const cleanedCode = code.trim().replace(/[^\w\-]/g, '');
+      document.getElementById("scanned-code").textContent = `📦 الكود الممسوح: ${cleanedCode}`;
+      console.log("Scanned Code:", cleanedCode);
+
+      fetch(`${sheetApi}?code=${encodeURIComponent(cleanedCode)}`)
         .then(res => res.json())
         .then(data => {
-          console.log("API Response:", data); // تتبع الرد من الخادم
+          console.log("API Response:", data);
           if (data.found && data.updated) {
             showMessage(`✅ مرحباً ${data.name}، تم تسجيل حضورك بنجاح`, true);
           } else if (data.found && !data.updated) {
@@ -62,13 +71,20 @@
     const html5QrCode = new Html5Qrcode("reader");
     Html5Qrcode.getCameras().then(devices => {
       if (devices && devices.length) {
+        const config = { fps: 10, qrbox: 250 };
         html5QrCode.start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: 250 },
+          config,
           code => {
-            html5QrCode.stop();
-            updateGuest(code);
-            setTimeout(() => html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, updateGuest), 4000);
+            html5QrCode.stop().then(() => {
+              updateGuest(code);
+              setTimeout(() => {
+                html5QrCode.start({ facingMode: "environment" }, config, code => {
+                  html5QrCode.stop();
+                  updateGuest(code);
+                });
+              }, 5000);
+            });
           },
           errorMessage => {
             // Ignored
