@@ -2,61 +2,68 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة تحكم هورميز (API مباشر)</title>
+  <title>لوحة تحكم الحضور - Hormez Security</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; margin: 0; padding: 2rem; }
-    h1 { text-align: center; margin-bottom: 2rem; }
-    .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
-    .card { padding: 1.5rem; border-radius: 12px; color: #fff; font-size: 1.2rem; text-align: center; }
-    .accepted { background: #28a745; } .rejected { background: #dc3545; }
-    .attended { background: #ffc107; color: #000; } .pending { background: #6c757d; }
-    .scanned { background: #007bff; }
-    .remaining { text-align: center; font-size: 1.3rem; margin: 2rem 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #1a1a1a;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 { margin-bottom: 1rem; }
+    .stat {
+      background: #333;
+      margin: 1rem auto;
+      padding: 1.5rem;
+      border-radius: 12px;
+      max-width: 400px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    .label { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .value { font-size: 2rem; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h1>لوحة تحكم Hormez Security</h1>
-  <div class="remaining">
-    <strong>المتبقي:</strong> <span id="remaining">--</span> من <span id="total">--</span>
+  <h1>لوحة التحكم المباشرة - Hormez</h1>
+
+  <div class="stat">
+    <div class="label">إجمالي الدعوات</div>
+    <div class="value" id="total">0</div>
   </div>
-  <div class="stats-container">
-    <div class="card accepted">✅ المقبولة: <span id="accepted">--</span></div>
-    <div class="card rejected">❌ المرفوضة: <span id="rejected">--</span></div>
-    <div class="card attended">🟡 الحضور: <span id="attended">--</span></div>
-    <div class="card pending">⚪ المعلقة: <span id="pending">--</span></div>
-    <div class="card scanned">🔵 الممسوحة: <span id="scanned">--</span></div>
+  <div class="stat">
+    <div class="label">تم الحضور (مسح ناجح)</div>
+    <div class="value" id="scanned">0</div>
+  </div>
+  <div class="stat">
+    <div class="label">لم يتم الحضور</div>
+    <div class="value" id="pending">0</div>
   </div>
 
   <script>
-    const apiURL = "https://script.google.com/macros/s/AKfycbyVGMX77kKSEU0ObkSfj0FE3mmwsm4NMcoAm0dvC48b9nzJg5fSqqUJTK2pO5eELBhpPg/exec";
+    const sheetUrl = "https://script.google.com/macros/s/AKfycbyVGMX77kKSEU0ObkSfj0FE3mmwsm4NMcoAm0dvC48b9nzJg5fSqqUJTK2pO5eELBhpPg/exec";
 
-    fetch(apiURL)
-      .then(response => response.json())
-      .then(data => {
-        let accepted = 0, rejected = 0, attended = 0, scanned = 0;
-
-        data.forEach(row => {
-          if (row.status === 'accepted') accepted++;
-          if (row.status === 'rejected') rejected++;
-          if (row.attended === 'yes') attended++;
-          if (row.scanned === 'yes') scanned++;
-        });
+    async function loadStats() {
+      try {
+        const res = await fetch(sheetUrl);
+        const data = await res.json();
 
         const total = data.length;
-        const pending = total - (accepted + rejected);
-        const remaining = total - attended;
+        const scanned = data.filter(r => r.scanned === "yes").length;
+        const pending = total - scanned;
 
         document.getElementById("total").textContent = total;
-        document.getElementById("accepted").textContent = accepted;
-        document.getElementById("rejected").textContent = rejected;
-        document.getElementById("attended").textContent = attended;
         document.getElementById("scanned").textContent = scanned;
         document.getElementById("pending").textContent = pending;
-        document.getElementById("remaining").textContent = remaining;
-      })
-      .catch(error => {
-        console.error("فشل في جلب البيانات:", error);
-      });
+
+      } catch (err) {
+        alert("فشل تحميل البيانات");
+      }
+    }
+
+    loadStats();
+    setInterval(loadStats, 5000); // تحديث كل 5 ثوانٍ
   </script>
 </body>
 </html>
