@@ -50,22 +50,32 @@
       document.getElementById("scanned-code").textContent = `📦 الكود الممسوح: ${cleanedCode}`;
       console.log("Scanned Code:", cleanedCode);
 
-      fetch(`${sheetApi}?code=${encodeURIComponent(cleanedCode)}`)
-        .then(res => res.json())
-        .then(data => {
-          console.log("API Response:", data);
-          if (data.found && data.updated) {
-            showMessage(`✅ مرحباً ${data.name}، تم تسجيل حضورك بنجاح`, true);
-          } else if (data.found && !data.updated) {
-            showMessage(`⚠️ ${data.name} - تم استخدام الدعوة مسبقاً`, false);
-          } else {
-            showMessage("❌ الكود غير صالح أو غير موجود", false);
-          }
-        })
-        .catch(err => {
-          console.error("Fetch Error:", err);
-          showMessage("❌ فشل الاتصال بالخادم", false);
-        });
+      if (!navigator.onLine) {
+        showMessage("❌ لا يوجد اتصال بالإنترنت", false);
+        return;
+      }
+
+      try {
+        fetch(`${sheetApi}?code=${encodeURIComponent(cleanedCode)}`)
+          .then(res => res.json())
+          .then(data => {
+            console.log("API Response:", data);
+            if (data.found && data.updated) {
+              showMessage(`✅ مرحباً ${data.name}، تم تسجيل حضورك بنجاح`, true);
+            } else if (data.found && !data.updated) {
+              showMessage(`⚠️ ${data.name} - تم استخدام الدعوة مسبقاً`, false);
+            } else {
+              showMessage("❌ الكود غير صالح أو غير موجود", false);
+            }
+          })
+          .catch(err => {
+            console.error("Fetch Error:", err);
+            showMessage("❌ فشل الاتصال بالخادم", false);
+          });
+      } catch (error) {
+        console.error("Unexpected Error:", error);
+        showMessage("❌ حدث خطأ غير متوقع", false);
+      }
     }
 
     const html5QrCode = new Html5Qrcode("reader");
@@ -87,7 +97,7 @@
             });
           },
           errorMessage => {
-            // لا حاجة لمعالجة الخطأ المؤقت هنا
+            // Ignored
           }
         );
       }
