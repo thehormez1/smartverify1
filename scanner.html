@@ -36,11 +36,13 @@
             resultContainer.className = "valid";
             resultContainer.textContent = `✅ مرحبًا ${row.name} - تم التحقق`;
 
-            // إرسال POST لتحديث Google Sheets
+            const timestamp = new Date().toISOString();
+
+            // إرسال POST لتحديث Google Sheets مع timestamp
             fetch(sheetApi, {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
-              body: `code=${code}`
+              body: `code=${code}&timestamp=${timestamp}`
             });
           }
         })
