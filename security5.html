@@ -59,8 +59,8 @@
     const scriptURL = "https://script.google.com/macros/s/AKfycbys4fyA6lVxboVS-GI-VGICKRcPNIhCqBdLsRhRHWleEh70RiYiCc3P8nMPPQDAjuHp/exec";
     const resultElement = document.getElementById("result");
 
-    function onScanSuccess(decodedText) {
-      html5QrcodeScanner.clear();
+    function onScanSuccess(decodedText, result) {
+      scanner.clear();
       resultElement.textContent = "⏳ جاري التحقق من الدعوة...";
 
       const pureCode = decodedText.includes("code=")
@@ -76,20 +76,26 @@
           } else {
             resultElement.className = "error";
           }
+          setTimeout(() => {
+            resultElement.textContent = "🔍 الرجاء مسح الباركود للتحقق";
+            resultElement.className = "";
+            scanner.start({ facingMode: "environment" }, config, onScanSuccess);
+          }, 3000);
         })
         .catch((err) => {
           resultElement.textContent = "⚠️ فشل في الاتصال: " + err;
           resultElement.className = "error";
+          setTimeout(() => {
+            resultElement.textContent = "🔍 الرجاء مسح الباركود للتحقق";
+            resultElement.className = "";
+            scanner.start({ facingMode: "environment" }, config, onScanSuccess);
+          }, 3000);
         });
     }
 
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      "reader",
-      { fps: 10, qrbox: 200 },
-      false
-    );
-
-    html5QrcodeScanner.render(onScanSuccess);
+    const scanner = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: 200 };
+    scanner.start({ facingMode: "environment" }, config, onScanSuccess);
   </script>
 </body>
 </html>
