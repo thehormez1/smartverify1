@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ماسح الدعوات - Hormez Security</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      color: #333;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 {
+      color: #000;
+      margin-bottom: 20px;
+    }
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+  <h1>ماسح الدعوات - Hormez Security</h1>
+  <div id="reader"></div>
+  <div id="result">يرجى توجيه الكاميرا إلى الباركود</div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbyVbRigPx-_yD7sbJ20VQ0FTJfBxjeeCvB7CaWj4ZgdOkK2Qqw8HEufm8LEUzS270nHow/exec";
+    const resultElement = document.getElementById("result");
+
+    function onScanSuccess(decodedText) {
+      html5QrcodeScanner.clear();
+      resultElement.textContent = "جاري التحقق من الدعوة...";
+      fetch(`${scriptURL}?code=${decodedText}`)
+        .then(response => response.text())
+        .then(text => {
+          resultElement.textContent = text;
+          if (text.includes("صالح")) {
+            resultElement.className = "success";
+          } else {
+            resultElement.className = "error";
+          }
+        })
+        .catch(() => {
+          resultElement.textContent = "فشل في الاتصال بالخادم";
+          resultElement.className = "error";
+        });
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
+</body>
+</html>
