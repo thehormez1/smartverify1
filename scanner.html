@@ -57,7 +57,10 @@
 
       try {
         fetch(`${sheetApi}?code=${encodeURIComponent(cleanedCode)}`)
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) throw new Error("Network response was not ok");
+            return res.json();
+          })
           .then(data => {
             console.log("API Response:", data);
             if (data.found && data.updated) {
