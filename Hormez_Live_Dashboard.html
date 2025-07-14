@@ -2,86 +2,58 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة تحكم Hormez Security</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>لوحة تحكم الدعوات - Hormez</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      background-color: #111;
+      background: #111;
       color: white;
       font-family: 'Segoe UI', sans-serif;
-      padding: 2rem;
       text-align: center;
+      padding: 20px;
     }
-    h1 {
-      color: #FFD700;
-      margin-bottom: 2rem;
-    }
+    h1 { color: #FFD700; }
     .card {
-      background-color: #222;
-      padding: 1.5rem;
-      border-radius: 12px;
-      margin-bottom: 1rem;
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 15px auto;
       max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+      box-shadow: 0 0 10px rgba(255,255,255,0.1);
     }
-    .label {
-      font-size: 1.2rem;
-      margin-bottom: 0.5rem;
-    }
-    .value {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #FFD700;
-    }
+    .value { font-size: 2rem; margin-bottom: 5px; }
+    .label { font-size: 1rem; color: #ccc; }
   </style>
 </head>
 <body>
-  <h1>📊 لوحة التحكم المباشرة - Hormez Security</h1>
+  <h1>📊 لوحة التحكم - Hormez</h1>
 
-  <div class="card">
-    <div class="label">إجمالي الدعوات</div>
-    <div class="value" id="total">0</div>
-  </div>
-  <div class="card">
-    <div class="label">✅ الحضور</div>
-    <div class="value" id="scanned">0</div>
-  </div>
-  <div class="card">
-    <div class="label">📥 المعلّقة</div>
-    <div class="value" id="pending">0</div>
-  </div>
-  <div class="card">
-    <div class="label">📊 نسبة الحضور</div>
-    <div class="value" id="percent">0%</div>
-  </div>
+  <div class="card"><div class="value" id="total">--</div><div class="label">إجمالي الدعوات</div></div>
+  <div class="card"><div class="value" id="scanned">--</div><div class="label">الحضور</div></div>
+  <div class="card"><div class="value" id="rejected">--</div><div class="label">مرفوضة</div></div>
+  <div class="card"><div class="value" id="pending">--</div><div class="label">معلقة</div></div>
+  <div class="card"><div class="value" id="rate">--</div><div class="label">نسبة الحضور</div></div>
 
   <script>
-    const endpoint = "https://script.google.com/macros/s/AKfycbys4fyA6lVxboVS-GI-VGICKRcPNIhCqBdLsRhRHWleEh70RiYiCc3P8nMPPQDAjuHp/exec";
+    const url = "https://script.google.com/macros/s/AKfycbys4fyA6lVxboVS-GI-VGICKRcPNIhCqBdLsRhRHWleEh70RiYiCc3P8nMPPQDAjuHp/exec";
 
     async function loadStats() {
       try {
-        const res = await fetch(endpoint);
-        const data = await res.json();
+        const res = await fetch(url);
+        const stats = await res.json();
 
-        const total = data.length;
-        const scanned = data.filter(r => r.scanned === "yes").length;
-        const pending = total - scanned;
-        const percent = total > 0 ? Math.round((scanned / total) * 100) : 0;
-
-        document.getElementById("total").textContent = total;
-        document.getElementById("scanned").textContent = scanned;
-        document.getElementById("pending").textContent = pending;
-        document.getElementById("percent").textContent = percent + "%";
-
-      } catch (e) {
-        alert("❌ فشل تحميل البيانات من الخادم");
+        document.getElementById("total").textContent = stats.total;
+        document.getElementById("scanned").textContent = stats.scanned;
+        document.getElementById("rejected").textContent = stats.rejected;
+        document.getElementById("pending").textContent = stats.pending;
+        document.getElementById("rate").textContent = stats.rate;
+      } catch {
+        alert("❌ فشل في تحميل البيانات من الخادم");
       }
     }
 
     loadStats();
-    setInterval(loadStats, 5000);
+    setInterval(loadStats, 10000);
   </script>
 </body>
 </html>
