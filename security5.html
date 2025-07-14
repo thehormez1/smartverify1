@@ -57,6 +57,7 @@
 
   <script>
     const scriptURL = "https://script.google.com/macros/s/AKfycbys4fyA6lVxboVS-GI-VGICKRcPNIhCqBdLsRhRHWleEh70RiYiCc3P8nMPPQDAjuHp/exec";
+    const allowedBaseURL = "https://thehormez1.github.io/smartverify1/";
     const resultElement = document.getElementById("result");
 
     const scanner = new Html5Qrcode("reader");
@@ -65,6 +66,22 @@
     function onScanSuccess(decodedText, result) {
       scanner.pause();
       resultElement.textContent = "⏳ جاري التحقق من الدعوة...";
+
+      try {
+        const url = new URL(decodedText);
+        if (!url.href.startsWith(allowedBaseURL)) {
+          throw new Error("رمز غير صالح - ليس من مصدر موثوق");
+        }
+      } catch (e) {
+        resultElement.textContent = "❌ رمز غير معتمد - يرجى استخدام دعوة رسمية";
+        resultElement.className = "error";
+        setTimeout(() => {
+          resultElement.textContent = "🔍 الرجاء مسح الباركود للتحقق";
+          resultElement.className = "";
+          scanner.resume();
+        }, 3000);
+        return;
+      }
 
       const pureCode = decodedText.includes("code=")
         ? new URL(decodedText).searchParams.get("code")
