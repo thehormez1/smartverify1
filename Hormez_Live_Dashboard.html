@@ -43,6 +43,20 @@
       font-weight: bold;
       color: #FFD700;
     }
+    #refresh-btn {
+      margin-top: 2rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 16px;
+      border: none;
+      background-color: #FFD700;
+      color: #000;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    #refresh-btn:hover {
+      background-color: #e6c200;
+    }
   </style>
 </head>
 <body>
@@ -63,6 +77,8 @@
     </div>
   </div>
 
+  <button id="refresh-btn" onclick="loadStats()">تحديث يدوي</button>
+
   <script>
     const sheetUrl = "https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec";
 
@@ -71,21 +87,24 @@
         const res = await fetch(sheetUrl);
         const data = await res.json();
 
-        const total = data.length;
-        const scanned = data.filter(r => r.scanned.toLowerCase() === "yes").length;
-        const pending = total - scanned;
+        if (!Array.isArray(data)) {
+          throw new Error("البيانات غير صالحة");
+        }
+
+        let total = data.length;
+        let scanned = data.filter(r => r.scanned && r.scanned.toLowerCase() === "yes").length;
+        let pending = total - scanned;
 
         document.getElementById("total").textContent = total;
         document.getElementById("scanned").textContent = scanned;
         document.getElementById("pending").textContent = pending;
-
       } catch (err) {
-        alert("⚠️ فشل الاتصال بقاعدة البيانات. تأكد من أن الرابط يعمل.");
+        alert("⚠️ فشل في تحميل البيانات: " + err.message);
       }
     }
 
-    loadStats();
-    setInterval(loadStats, 5000); // تحديث كل 5 ثوانٍ
+    loadStats(); // تحميل مبدئي
+    setInterval(loadStats, 5000); // تحديث تلقائي كل 5 ثوانٍ
   </script>
 </body>
 </html>
