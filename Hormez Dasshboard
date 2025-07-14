@@ -1,0 +1,84 @@
+import { useEffect, useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+
+export default function Dashboard() {
+  const [data, setData] = useState([])
+  const [stats, setStats] = useState({ total: 0, used: 0, invalid: 0, lastScan: "-" })
+
+  useEffect(() => {
+    fetch("https://opensheet.elk.sh/1eGsh1gbojxTxy_JE2KfljWKGjtCXHkg2Gty9ntEcw-k/Sheet1")
+      .then(res => res.json())
+      .then(rows => {
+        setData(rows)
+        const used = rows.filter(row => row.status.toLowerCase() === "used").length
+        const invalid = rows.filter(row => row.status.toLowerCase() === "invalid").length
+        const lastScan = rows[rows.length - 1]?.timestamp || "-"
+        setStats({
+          total: rows.length,
+          used,
+          invalid,
+          lastScan
+        })
+      })
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-6 text-gray-900">
+      <h1 className="text-3xl font-bold mb-6 text-center text-yellow-600">Hormez Security Dashboard</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-600">Total Invitations</p>
+            <h2 className="text-xl font-bold">{stats.total}</h2>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-600">Used Invitations</p>
+            <h2 className="text-xl font-bold text-green-600">{stats.used}</h2>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-600">Invalid Attempts</p>
+            <h2 className="text-xl font-bold text-red-600">{stats.invalid}</h2>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-600">Last Scan</p>
+            <h2 className="text-md font-semibold">{stats.lastScan}</h2>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="bg-white rounded-xl shadow p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Recent Scans</h3>
+          <Button onClick={() => window.location.reload()}>Refresh</Button>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Invitation Code</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Time</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.slice().reverse().map((row, index) => (
+              <TableRow key={index}>
+                <TableCell>{row.code}</TableCell>
+                <TableCell className={row.status.toLowerCase() === "used" ? "text-green-600" : row.status.toLowerCase() === "invalid" ? "text-red-600" : ""}>{row.status}</TableCell>
+                <TableCell>{row.timestamp}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  )
+}
