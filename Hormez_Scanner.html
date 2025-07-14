@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ماسح الدعوات - Hormez</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #FFD700;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      margin-bottom: 1.5rem;
+      font-size: 24px;
+    }
+    #reader {
+      width: 300px;
+      margin: 0 auto;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 1.4rem;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+  <h1>ماسح باركود الدعوات - Hormez</h1>
+  <div id="reader"></div>
+  <div id="result">👆 امسح الباركود للتحقق</div>
+
+  <script>
+    const scanner = new Html5Qrcode("reader");
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec";
+
+    function showResult(message, isSuccess) {
+      const resultBox = document.getElementById("result");
+      resultBox.textContent = message;
+      resultBox.className = isSuccess ? "success" : "error";
+    }
+
+    function startScanner() {
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          scanner.stop();
+          fetch(`${scriptUrl}?code=${encodeURIComponent(decodedText)}`)
+            .then(res => res.text())
+            .then(text => {
+              const success = text.includes("صالحة") || text.includes("تم الحضور");
+              showResult(text, success);
+              setTimeout(startScanner, 3000);
+            })
+            .catch(() => {
+              showResult("⚠️ حدث خطأ في الاتصال بالخادم", false);
+              setTimeout(startScanner, 3000);
+            });
+        },
+        (errorMessage) => {
+          // تجاهل الأخطاء اللحظية
+        }
+      );
+    }
+
+    startScanner();
+  </script>
+</body>
+</html>
