@@ -8,50 +8,52 @@
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #0e0e0e;
-      color: #fff;
-      text-align: center;
-      padding: 40px 20px;
+      background-color: #111;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
     }
     h1 {
-      font-size: 2rem;
-      margin-bottom: 25px;
       color: #FFD700;
+      margin-bottom: 20px;
     }
     #reader {
-      width: 100%;
-      max-width: 450px;
-      margin: 0 auto;
-      border: 3px solid #FFD700;
+      width: 300px;
+      max-width: 90vw;
+      border: 2px solid #FFD700;
       border-radius: 12px;
       padding: 10px;
-      background-color: #1e1e1e;
+      background-color: #1a1a1a;
     }
     #result {
-      margin-top: 25px;
-      font-size: 1.3rem;
-      padding: 15px;
-      border-radius: 10px;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
+      margin-top: 20px;
+      font-size: 1.2rem;
+      padding: 12px;
+      border-radius: 8px;
+      min-width: 280px;
+      text-align: center;
     }
     .success {
       background-color: #d4edda;
       color: #155724;
-      border: 2px solid #c3e6cb;
+      border: 1px solid #c3e6cb;
     }
     .error {
       background-color: #f8d7da;
       color: #721c24;
-      border: 2px solid #f5c6cb;
+      border: 1px solid #f5c6cb;
     }
   </style>
 </head>
 <body>
-  <h1>📷 نظام تحقق الدعوات</h1>
+  <h1>📷 تحقق من الباركود</h1>
   <div id="reader"></div>
-  <div id="result">📡 يرجى توجيه الكاميرا إلى الباركود</div>
+  <div id="result">🔍 الرجاء مسح الباركود للتحقق</div>
 
   <script>
     const scriptURL = "https://script.google.com/macros/s/AKfycbyVbRigPx-_yD7sbJ20VQ0FTJfBxjeeCvB7CaWj4ZgdOkK2Qqw8HEufm8LEUzS270nHow/exec";
@@ -59,9 +61,10 @@
 
     function onScanSuccess(decodedText) {
       html5QrcodeScanner.clear();
-      resultElement.textContent = "🔄 جاري التحقق من الدعوة...";
+      resultElement.textContent = "⏳ جاري التحقق من الدعوة...";
+
       fetch(`${scriptURL}?code=${decodedText}`)
-        .then(response => response.text())
+        .then(res => res.text())
         .then(text => {
           resultElement.textContent = text;
           if (text.includes("صالح")) {
@@ -71,14 +74,18 @@
           }
         })
         .catch(() => {
-          resultElement.textContent = "⚠️ فشل في الاتصال بالخادم";
+          resultElement.textContent = "⚠️ تعذر الاتصال بالخادم";
           resultElement.className = "error";
         });
     }
 
-    const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader",
+      { fps: 10, qrbox: 200 },
+      false
+    );
+
     html5QrcodeScanner.render(onScanSuccess);
   </script>
 </body>
 </html>
-
