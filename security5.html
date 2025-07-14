@@ -56,7 +56,7 @@
   <div id="result">🔍 الرجاء مسح الباركود للتحقق</div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec";
+    const scriptURL = "https://script.google.com/macros/s/AKfycbyVbRigPx-_yD7sbJ20VQ0FTJfBxjeeCvB7CaWj4ZgdOkK2Qqw8HEufm8LEUzS270nHow/exec";
     const resultElement = document.getElementById("result");
 
     function onScanSuccess(decodedText) {
@@ -74,7 +74,7 @@
           }
         })
         .catch((err) => {
-          resultElement.textContent = "⚠️ تعذر الاتصال بالخادم: " + err;
+          resultElement.textContent = "⚠️ فشل في الاتصال: " + err;
           resultElement.className = "error";
         });
     }
