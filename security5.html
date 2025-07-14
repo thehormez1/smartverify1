@@ -8,42 +8,50 @@
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f4f4f4;
-      color: #333;
+      background: #0e0e0e;
+      color: #fff;
       text-align: center;
-      padding: 30px;
+      padding: 40px 20px;
     }
     h1 {
-      color: #000;
-      margin-bottom: 20px;
+      font-size: 2rem;
+      margin-bottom: 25px;
+      color: #FFD700;
     }
     #reader {
       width: 100%;
-      max-width: 400px;
+      max-width: 450px;
       margin: 0 auto;
+      border: 3px solid #FFD700;
+      border-radius: 12px;
+      padding: 10px;
+      background-color: #1e1e1e;
     }
     #result {
-      margin-top: 20px;
-      font-size: 1.2rem;
-      padding: 10px;
-      border-radius: 8px;
+      margin-top: 25px;
+      font-size: 1.3rem;
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .success {
       background-color: #d4edda;
       color: #155724;
-      border: 1px solid #c3e6cb;
+      border: 2px solid #c3e6cb;
     }
     .error {
       background-color: #f8d7da;
       color: #721c24;
-      border: 1px solid #f5c6cb;
+      border: 2px solid #f5c6cb;
     }
   </style>
 </head>
 <body>
-  <h1>ماسح الدعوات - Hormez Security</h1>
+  <h1>📷 نظام تحقق الدعوات</h1>
   <div id="reader"></div>
-  <div id="result">يرجى توجيه الكاميرا إلى الباركود</div>
+  <div id="result">📡 يرجى توجيه الكاميرا إلى الباركود</div>
 
   <script>
     const scriptURL = "https://script.google.com/macros/s/AKfycbyVbRigPx-_yD7sbJ20VQ0FTJfBxjeeCvB7CaWj4ZgdOkK2Qqw8HEufm8LEUzS270nHow/exec";
@@ -51,7 +59,7 @@
 
     function onScanSuccess(decodedText) {
       html5QrcodeScanner.clear();
-      resultElement.textContent = "جاري التحقق من الدعوة...";
+      resultElement.textContent = "🔄 جاري التحقق من الدعوة...";
       fetch(`${scriptURL}?code=${decodedText}`)
         .then(response => response.text())
         .then(text => {
@@ -63,7 +71,7 @@
           }
         })
         .catch(() => {
-          resultElement.textContent = "فشل في الاتصال بالخادم";
+          resultElement.textContent = "⚠️ فشل في الاتصال بالخادم";
           resultElement.className = "error";
         });
     }
@@ -73,3 +81,4 @@
   </script>
 </body>
 </html>
+
