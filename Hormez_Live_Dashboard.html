@@ -2,109 +2,106 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة تحكم الحضور - Hormez Security</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم - Hormez Security</title>
   <style>
-    * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #000;
-      color: #FFD700;
-      margin: 0;
-      padding: 2rem 1rem;
+      background-color: #121212;
+      color: white;
       text-align: center;
+      padding: 30px;
     }
     h1 {
-      margin-bottom: 2rem;
-      font-size: 28px;
       color: #FFD700;
+      margin-bottom: 30px;
     }
-    .stats-container {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      max-width: 400px;
-      margin: 0 auto;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: auto;
     }
-    .stat {
-      background: #1e1e1e;
-      padding: 1.5rem;
+    .card {
+      background-color: #1e1e1e;
       border-radius: 12px;
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
-      color: #fff;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    .label {
-      font-size: 1.1rem;
-      color: #ccc;
-      margin-bottom: 0.5rem;
+    .card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: #aaa;
     }
-    .value {
-      font-size: 2rem;
+    .card .value {
+      font-size: 2.5rem;
       font-weight: bold;
-      color: #FFD700;
+      color: #00d084;
     }
-    #refresh-btn {
-      margin-top: 2rem;
-      padding: 0.75rem 1.5rem;
-      font-size: 16px;
-      border: none;
-      background-color: #FFD700;
-      color: #000;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    #refresh-btn:hover {
-      background-color: #e6c200;
-    }
+    .card .error { color: #ff4d4f; }
+    .card .pending { color: #faad14; }
+    .card .neutral { color: #999; }
   </style>
 </head>
 <body>
-  <h1>لوحة التحكم المباشرة - Hormez Security</h1>
-
-  <div class="stats-container">
-    <div class="stat">
-      <div class="label">إجمالي الدعوات</div>
-      <div class="value" id="total">0</div>
+  <h1>📊 لوحة تحكم نظام التحقق - Hormez</h1>
+  <div class="grid">
+    <div class="card">
+      <h2>الدعوات المقبولة</h2>
+      <div class="value" id="accepted">0</div>
     </div>
-    <div class="stat">
-      <div class="label">تم الحضور (تم المسح)</div>
+    <div class="card">
+      <h2>الدعوات المرفوضة</h2>
+      <div class="value error" id="rejected">0</div>
+    </div>
+    <div class="card">
+      <h2>الحضور (تم المسح)</h2>
       <div class="value" id="scanned">0</div>
     </div>
-    <div class="stat">
-      <div class="label">لم يتم الحضور</div>
-      <div class="value" id="pending">0</div>
+    <div class="card">
+      <h2>المعلقة</h2>
+      <div class="value pending" id="pending">0</div>
+    </div>
+    <div class="card">
+      <h2>نسبة الحضور</h2>
+      <div class="value neutral" id="rate">0%</div>
     </div>
   </div>
 
-  <button id="refresh-btn" onclick="loadStats()">تحديث يدوي</button>
-
   <script>
-    const sheetUrl = "https://script.google.com/macros/s/AKfycbzOLmwmzmUudfWv1ITpFk78Ob3EXfTs0aL9w2oL0d3JEPjGPnJF7Tr0DW1177MK_rTIcg/exec";
+    const url = "https://script.google.com/macros/s/AKfycbys4fyA6lVxboVS-GI-VGICKRcPNIhCqBdLsRhRHWleEh70RiYiCc3P8nMPPQDAjuHp/exec";
 
-    async function loadStats() {
+    async function updateStats() {
       try {
-        const res = await fetch(sheetUrl);
+        const res = await fetch(url);
         const data = await res.json();
 
-        if (!Array.isArray(data)) {
-          throw new Error("البيانات غير صالحة");
-        }
+        let accepted = 0, rejected = 0, scanned = 0, pending = 0;
 
-        let total = data.length;
-        let scanned = data.filter(r => r.scanned && r.scanned.toLowerCase() === "yes").length;
-        let pending = total - scanned;
+        data.forEach(row => {
+          if (row.status === "accepted") accepted++;
+          else if (row.status === "rejected") rejected++;
 
-        document.getElementById("total").textContent = total;
+          if (row.scanned === "yes") scanned++;
+          else pending++;
+        });
+
+        const total = data.length;
+        const attendanceRate = total ? ((scanned / total) * 100).toFixed(1) + "%" : "0%";
+
+        document.getElementById("accepted").textContent = accepted;
+        document.getElementById("rejected").textContent = rejected;
         document.getElementById("scanned").textContent = scanned;
         document.getElementById("pending").textContent = pending;
+        document.getElementById("rate").textContent = attendanceRate;
       } catch (err) {
-        alert("⚠️ فشل في تحميل البيانات: " + err.message);
+        alert("فشل في تحميل البيانات: " + err);
       }
     }
 
-    loadStats(); // تحميل مبدئي
-    setInterval(loadStats, 5000); // تحديث تلقائي كل 5 ثوانٍ
+    updateStats();
+    setInterval(updateStats, 10000);
   </script>
 </body>
 </html>
