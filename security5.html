@@ -63,7 +63,11 @@
       html5QrcodeScanner.clear();
       resultElement.textContent = "⏳ جاري التحقق من الدعوة...";
 
-      fetch(`${scriptURL}?code=${decodedText}`)
+      const pureCode = decodedText.includes("code=")
+        ? new URL(decodedText).searchParams.get("code")
+        : decodedText;
+
+      fetch(`${scriptURL}?code=${pureCode}`)
         .then(res => res.text())
         .then(text => {
           resultElement.textContent = text;
