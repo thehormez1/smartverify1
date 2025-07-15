@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ماسح الدعوة - زفاف خالد</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      background-color: #111;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #FFD700;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+    #reader {
+      width: 400px;
+      max-width: 90vw;
+      margin: 0 auto;
+      border: 2px solid #FFD700;
+      border-radius: 12px;
+      padding: 10px;
+      background-color: #1a1a1a;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 1.3rem;
+      padding: 14px;
+      border-radius: 8px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hormez Security</h1>
+  <h2>🎉 زفاف خالد</h2>
+
+  <div id="reader"></div>
+  <div id="result">📷 الرجاء مسح الباركود</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
+      authDomain: "hormez-invites.firebaseapp.com",
+      projectId: "hormez-invites",
+      storageBucket: "hormez-invites.appspot.com",
+      messagingSenderId: "433719543971",
+      appId: "1:433719543971:web:758146b46c6a26d53b9716"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const reader = new Html5Qrcode("reader");
+    const config = { fps: 15, qrbox: 300 };
+
+    function showResult(message, success = true) {
+      const el = document.getElementById("result");
+      el.textContent = message;
+      el.className = success ? "success" : "error";
+      setTimeout(() => {
+        el.textContent = "📷 الرجاء مسح الباركود";
+        el.className = "";
+      }, 4000);
+    }
+
+    async function handleScan(code) {
+      try {
+        const docRef = doc(db, "invites", code);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+          showResult("❌ رقم الدعوة غير موجود", false);
+          return;
+        }
+
+        const data = docSnap.data();
+        if (data.status === "yes") {
+          showResult("⚠️ تم استخدام الدعوة مسبقًا", false);
+        } else if (data.eventName !== "زفاف خالد") {
+          showResult("🚫 هذه الدعوة ليست لهذا الحدث", false);
+        } else {
+          await updateDoc(docRef, { status: "yes" });
+          showResult("✅ الدعوة صالحة، أهلًا وسهلًا!");
+        }
+      } catch (err) {
+        showResult("⚠️ حدث خطأ في التحقق", false);
+      }
+    }
+
+    reader.start(
+      { facingMode: "environment" },
+      config,
+      (decodedText) => {
+        reader.pause();
+        handleScan(decodedText).finally(() => {
+          setTimeout(() => reader.resume(), 4000);
+        });
+      }
+    );
+  </script>
+</body>
+</html>
