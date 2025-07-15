@@ -1,51 +1,85 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>لوحة التحكم - Hormez</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
-  <style>
-    body { background: #111; color: white; font-family: Arial; text-align: center; padding: 2rem; }
-    .card { background: #222; margin: 1rem auto; padding: 1.5rem; border-radius: 10px; width: 300px; }
-    h2 { color: #FFD700; }
-  </style>
-</head>
-<body>
-  <h1>📊 لوحة التحكم - Hormez</h1>
-  <div class="card"><h2>📦 إجمالي الدعوات</h2><div id="total">0</div></div>
-  <div class="card"><h2>✅ الحضور</h2><div id="used">0</div></div>
-  <div class="card"><h2>⏳ لم تحضر</h2><div id="pending">0</div></div>
-  <div class="card"><h2>📈 نسبة الحضور</h2><div id="percentage">0%</div></div>
+  <meta charset="UTF-8">
+  <title>لوحة تحكم الدعوات - Hormez</title>
+  <script type="module">
+    // استيراد Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <script>
+    // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
       authDomain: "hormez-invites.firebaseapp.com",
       projectId: "hormez-invites",
+      storageBucket: "hormez-invites.appspot.com",
+      messagingSenderId: "433719543971",
+      appId: "1:433719543971:web:758146b46c6a26d53b9716"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
-    function loadStats() {
-      db.collection("invites").get().then(snapshot => {
-        let total = snapshot.size;
-        let used = 0;
-        snapshot.forEach(doc => {
-          if (doc.data().status === "used") used++;
-        });
-        let pending = total - used;
-        let percent = total ? ((used / total) * 100).toFixed(1) + "%" : "0%";
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        document.getElementById("total").textContent = total;
-        document.getElementById("used").textContent = used;
-        document.getElementById("pending").textContent = pending;
-        document.getElementById("percentage").textContent = percent;
+    async function loadStats() {
+      const snapshot = await getDocs(collection(db, "invites"));
+      let total = 0, accepted = 0, rejected = 0, pending = 0;
+
+      snapshot.forEach((doc) => {
+        total++;
+        const data = doc.data();
+        if (data.status === "yes") {
+          accepted++;
+        } else if (data.status === "rejected") {
+          rejected++;
+        } else {
+          pending++;
+        }
       });
+
+      document.getElementById("total").textContent = total;
+      document.getElementById("accepted").textContent = accepted;
+      document.getElementById("rejected").textContent = rejected;
+      document.getElementById("pending").textContent = pending;
+
+      const percent = total > 0 ? ((accepted / total) * 100).toFixed(1) : 0;
+      document.getElementById("percent").textContent = percent + "%";
     }
 
-    loadStats();
-    setInterval(loadStats, 5000);
+    window.onload = loadStats;
+    setInterval(loadStats, 5000); // تحديث كل 5 ثوانٍ
   </script>
+
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 {
+      color: #FFD700;
+      margin-bottom: 1rem;
+    }
+    .box {
+      background: #222;
+      padding: 1.5rem;
+      margin: 1rem auto;
+      border-radius: 12px;
+      width: 300px;
+      box-shadow: 0 0 10px #000;
+    }
+    .label { font-size: 1rem; margin-bottom: 0.5rem; }
+    .value { font-size: 1.8rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>لوحة تحكم الحضور - Hormez</h1>
+  <div class="box"><div class="label">📋 إجمالي الدعوات</div><div class="value" id="total">0</div></div>
+  <div class="box"><div class="label">✅ الحضور (تمت الموافقة)</div><div class="value" id="accepted">0</div></div>
+  <div class="box"><div class="label">⏳ المعلّقة</div><div class="value" id="pending">0</div></div>
+  <div class="box"><div class="label">❌ المرفوضة</div><div class="value" id="rejected">0</div></div>
+  <div class="box"><div class="label">📊 نسبة الحضور</div><div class="value" id="percent">0%</div></div>
 </body>
 </html>
