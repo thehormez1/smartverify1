@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>ماسح الدعوات - Hormez</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      padding: 2rem;
+    }
+    #reader { width: 300px; margin: auto; border: 2px solid #FFD700; }
+    #result { margin-top: 1rem; font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+  <h1>📷 مسح الباركود - Hormez</h1>
+  <div id="reader"></div>
+  <div id="result">يرجى مسح الباركود</div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
+      authDomain: "hormez-invites.firebaseapp.com",
+      projectId: "hormez-invites",
+      storageBucket: "hormez-invites.appspot.com",
+      messagingSenderId: "433719543971",
+      appId: "1:433719543971:web:758146b46c6a26d53b9716"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const reader = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: 200 };
+
+    function processCode(code) {
+      document.getElementById("result").textContent = "⏳ جاري التحقق...";
+      db.collection("invites").where("code", "==", code).get().then(snapshot => {
+        if (snapshot.empty) {
+          document.getElementById("result").textContent = "❌ رقم الدعوة غير موجود";
+          return;
+        }
+        const doc = snapshot.docs[0];
+        const data = doc.data();
+        if (data.status === "used") {
+          document.getElementById("result").textContent = "⚠️ تم استخدام الدعوة مسبقاً";
+        } else {
+          db.collection("invites").doc(doc.id).update({ status: "used" });
+          document.getElementById("result").textContent = "✅ الدعوة صالحة وتم التأكيد";
+        }
+      }).catch(err => {
+        document.getElementById("result").textContent = "خطأ في الاتصال: " + err;
+      });
+    }
+
+    reader.start({ facingMode: "environment" }, config, (text) => {
+      if (text.includes("code=")) {
+        const code = new URL(text).searchParams.get("code");
+        reader.stop();
+        processCode(code);
+        setTimeout(() => reader.start({ facingMode: "environment" }, config, (txt) => {
+          if (txt.includes("code=")) {
+            const c = new URL(txt).searchParams.get("code");
+            reader.stop();
+            processCode(c);
+          }
+        }), 3000);
+      }
+    });
+  </script>
+</body>
+</html>
