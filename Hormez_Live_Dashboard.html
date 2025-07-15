@@ -1,87 +1,84 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>لوحة تحكم الدعوات - Hormez Security</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>لوحة تحكم الحضور - Hormez Security</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
+      authDomain: "hormez-inv.firebaseapp.com",
+      projectId: "hormez-inv",
+      storageBucket: "hormez-inv.appspot.com",
+      messagingSenderId: "433719543971",
+      appId: "1:433719543971:web:758146b46c6a26d53b9716"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadStats() {
+      const snapshot = await getDocs(collection(db, "invites"));
+      const data = snapshot.docs.map(doc => doc.data());
+
+      const total = data.length;
+      const accepted = data.filter(d => d.Status === "yes").length;
+      const rejected = data.filter(d => d.Status === "no").length;
+      const pending = data.filter(d => !d.Status || d.Status === "pending").length;
+      const attendanceRate = total > 0 ? ((accepted / total) * 100).toFixed(1) + "%" : "0%";
+
+      document.getElementById("total").textContent = total;
+      document.getElementById("accepted").textContent = accepted;
+      document.getElementById("rejected").textContent = rejected;
+      document.getElementById("pending").textContent = pending;
+      document.getElementById("rate").textContent = attendanceRate;
+    }
+
+    window.onload = loadStats;
+  </script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #111;
-      color: #fff;
+      background: #121212;
+      color: white;
       padding: 2rem;
       text-align: center;
     }
     h1 {
+      margin-bottom: 1rem;
       color: #FFD700;
-      margin-bottom: 2rem;
     }
     .stat {
-      background: #1f1f1f;
+      background: #1e1e1e;
       margin: 1rem auto;
       padding: 1.5rem;
       border-radius: 12px;
       max-width: 400px;
-      box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
     .label {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       margin-bottom: 0.5rem;
+      color: #ccc;
     }
     .value {
       font-size: 2rem;
       font-weight: bold;
+      color: #FFD700;
     }
   </style>
 </head>
 <body>
-  <h1>📊 لوحة التحكم - Hormez</h1>
+  <h1>📊 لوحة تحكم الحضور - Hormez</h1>
 
-  <div class="stat">
-    <div class="label">إجمالي الدعوات</div>
-    <div class="value" id="total">--</div>
-  </div>
-
-  <div class="stat">
-    <div class="label">تم الحضور</div>
-    <div class="value" id="scanned">--</div>
-  </div>
-
-  <div class="stat">
-    <div class="label">لم يتم الحضور</div>
-    <div class="value" id="pending">--</div>
-  </div>
-
-  <div class="stat">
-    <div class="label">نسبة الحضور</div>
-    <div class="value" id="percentage">--%</div>
-  </div>
-
-  <script>
-    const statsURL = "https://script.google.com/macros/s/AKfycbys4fyA6lVxboVS-GI-VGICKRcPNIhCqBdLsRhRHWleEh70RiYiCc3P8nMPPQDAjuHp/exec?stats=true";
-
-    async function loadStats() {
-      try {
-        const res = await fetch(statsURL);
-        const data = await res.json();
-
-        const total = data.length;
-        const scanned = data.filter(r => r.Status === "yes").length;
-        const pending = total - scanned;
-        const percentage = total > 0 ? ((scanned / total) * 100).toFixed(1) : 0;
-
-        document.getElementById("total").textContent = total;
-        document.getElementById("scanned").textContent = scanned;
-        document.getElementById("pending").textContent = pending;
-        document.getElementById("percentage").textContent = percentage + "%";
-
-      } catch (err) {
-        alert("❌ فشل تحميل البيانات من الخادم");
-      }
-    }
-
-    loadStats();
-    setInterval(loadStats, 7000); // تحديث كل 7 ثواني
-  </script>
+  <div class="stat"><div class="label">إجمالي الدعوات</div><div class="value" id="total">--</div></div>
+  <div class="stat"><div class="label">الدعوات المقبولة</div><div class="value" id="accepted">--</div></div>
+  <div class="stat"><div class="label">الدعوات المرفوضة</div><div class="value" id="rejected">--</div></div>
+  <div class="stat"><div class="label">الدعوات المعلقة</div><div class="value" id="pending">--</div></div>
+  <div class="stat"><div class="label">نسبة الحضور</div><div class="value" id="rate">--</div></div>
 </body>
 </html>
