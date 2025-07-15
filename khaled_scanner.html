@@ -1,126 +1,75 @@
+<!-- ✅ النسخة الأولى: صفحة مسح الباركود وربطها مع Firebase -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ماسح الدعوات - Hormez Security</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #111;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      color: #FFD700;
-      margin-bottom: 10px;
-    }
-    h2 {
-      color: #fff;
-      margin-bottom: 20px;
-    }
-    #reader {
-      width: 300px;
-      max-width: 90vw;
-      border: 2px solid #FFD700;
-      border-radius: 12px;
-      padding: 10px;
-      background-color: #1a1a1a;
-    }
-    #result {
-      margin-top: 20px;
-      font-size: 1.2rem;
-      padding: 12px;
-      border-radius: 8px;
-      min-width: 280px;
-      text-align: center;
-    }
-    .success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    .error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-  </style>
-</head>
-<body>
-  <h1>Hormez Security</h1>
-  <h2>🎉 زفاف خالد</h2>
-  <div id="reader"></div>
-  <div id="result">🔍 الرجاء مسح الباركود للتحقق</div>
+  <meta charset="UTF-8" />
+  <title>ماسح الباركود - Hormez</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
       authDomain: "hormez-invites.firebaseapp.com",
-      projectId: "hormez-inv",
+      projectId: "hormez-invites",
       storageBucket: "hormez-invites.appspot.com",
       messagingSenderId: "433719543971",
       appId: "1:433719543971:web:758146b46c6a26d53b9716"
     };
-    
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const result = document.getElementById("result");
     const scanner = new Html5Qrcode("reader");
     const config = { fps: 10, qrbox: 250 };
-    const resultElement = document.getElementById("result");
 
-    function onScanSuccess(decodedText) {
+    function resetScanner() {
+      result.textContent = "📷 الرجاء مسح الباركود";
+      result.className = "";
+      scanner.resume();
+    }
+
+    function showMessage(message, type) {
+      result.textContent = message;
+      result.className = type;
+      setTimeout(resetScanner, 3000);
+    }
+
+    async function onScanSuccess(decodedText) {
       scanner.pause();
-      resultElement.textContent = "⏳ جاري التحقق من الدعوة...";
-
       const url = new URL(decodedText);
-      const code = url.searchParams.get("code");
+      const code = url.searchParams.get("code") || "";
+      if (!code.startsWith("INV-")) return showMessage("❌ رمز غير صالح", "error");
 
-      if (!code) {
-        resultElement.textContent = "❌ رمز غير صالح";
-        resultElement.className = "error";
-        scanner.resume();
-        return;
+      const ref = doc(db, "invites", code);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) return showMessage("❌ رقم الدعوة غير موجود", "error");
+      const data = snap.data();
+
+      if (data.status === "yes") {
+        showMessage("⚠️ تم استخدام هذه الدعوة مسبقًا", "error");
+      } else {
+        await updateDoc(ref, { status: "yes" });
+        showMessage("✅ تم التحقق من الدعوة بنجاح", "success");
       }
-
-      db.collection("invites").doc(code).get().then(doc => {
-        if (!doc.exists) {
-          resultElement.textContent = "❌ رقم الدعوة غير موجود";
-          resultElement.className = "error";
-        } else {
-          const data = doc.data();
-          if (data.status === "scanned") {
-            resultElement.textContent = "⚠️ تم استخدام هذه الدعوة مسبقًا";
-            resultElement.className = "error";
-          } else {
-            resultElement.textContent = "✅ الدعوة صالحة، مرحبًا بكم!";
-            resultElement.className = "success";
-            db.collection("invites").doc(code).update({ status: "scanned" });
-          }
-        }
-        setTimeout(() => {
-          resultElement.textContent = "🔍 الرجاء مسح الباركود للتحقق";
-          resultElement.className = "";
-          scanner.resume();
-        }, 3000);
-      }).catch(error => {
-        resultElement.textContent = "❌ خطأ في الاتصال بالخادم";
-        resultElement.className = "error";
-        scanner.resume();
-      });
     }
 
     scanner.start({ facingMode: "environment" }, config, onScanSuccess);
   </script>
+  <style>
+    body { background: #111; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+    #reader { margin: auto; width: 300px; background: #222; padding: 10px; border-radius: 12px; }
+    #result { margin-top: 20px; font-size: 1.2em; padding: 10px; border-radius: 8px; }
+    .success { background-color: #d4edda; color: #155724; }
+    .error { background-color: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <h2>ماسح باركود - Hormez</h2>
+  <div id="reader"></div>
+  <div id="result">📷 الرجاء مسح الباركود</div>
 </body>
 </html>
