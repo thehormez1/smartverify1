@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة تحكم - زفاف خالد</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #1a1a1a;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    img.logo {
+      width: 120px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 30px;
+      color: #FFD700;
+    }
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      justify-content: center;
+    }
+    .stat {
+      background-color: #2a2a2a;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    .label {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    .value {
+      font-size: 26px;
+      font-weight: bold;
+      color: #FFD700;
+    }
+  </style>
+</head>
+<body>
+  <img src="https://thehormez1.github.io/smartverify1/logo.png" class="logo" alt="Hormez Logo" />
+  <h1>لوحة تحكم الحدث: زفاف خالد</h1>
+
+  <div class="stats-container">
+    <div class="stat">
+      <div class="label">الدعوات الكلية</div>
+      <div class="value" id="total">0</div>
+    </div>
+    <div class="stat">
+      <div class="label">تم الحضور</div>
+      <div class="value" id="scanned">0</div>
+    </div>
+    <div class="stat">
+      <div class="label">لم يتم الحضور</div>
+      <div class="value" id="pending">0</div>
+    </div>
+    <div class="stat">
+      <div class="label">نسبة الحضور</div>
+      <div class="value" id="percentage">0%</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
+      authDomain: "hormez-invites.firebaseapp.com",
+      projectId: "hormez-invites",
+      storageBucket: "hormez-invites.appspot.com",
+      messagingSenderId: "433719543971",
+      appId: "1:433719543971:web:758146b46c6a26d53b9716"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadStats() {
+      const snapshot = await getDocs(collection(db, "invites"));
+      const invites = snapshot.docs.map(doc => doc.data());
+
+      const filtered = invites.filter(inv => inv.eventName === "زفاف خالد");
+      const total = filtered.length;
+      const scanned = filtered.filter(inv => inv.status === "yes").length;
+      const pending = total - scanned;
+      const percentage = total > 0 ? ((scanned / total) * 100).toFixed(1) : 0;
+
+      document.getElementById("total").textContent = total;
+      document.getElementById("scanned").textContent = scanned;
+      document.getElementById("pending").textContent = pending;
+      document.getElementById("percentage").textContent = percentage + "%";
+    }
+
+    loadStats();
+    setInterval(loadStats, 5000);
+  </script>
+</body>
+</html>
