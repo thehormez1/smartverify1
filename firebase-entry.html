@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إضافة بيانات الدعوات - Hormez</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
+      authDomain: "hormez-inv.firebaseapp.com",
+      projectId: "hormez-inv",
+      storageBucket: "hormez-inv.appspot.com",
+      messagingSenderId: "433719543971",
+      appId: "1:433719543971:web:758146b46c6a26d53b9716"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.addInvite = async function () {
+      const code = document.getElementById("code").value.trim();
+      const status = document.getElementById("status").value;
+      const eventName = document.getElementById("eventName").value.trim();
+      const msg = document.getElementById("message");
+
+      if (!code || !eventName) {
+        msg.textContent = "⚠️ الرجاء تعبئة جميع الحقول";
+        msg.style.color = "red";
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "invites"), {
+          code,
+          status,
+          eventName
+        });
+        msg.textContent = "✅ تمت الإضافة بنجاح";
+        msg.style.color = "green";
+        document.getElementById("form").reset();
+      } catch (e) {
+        msg.textContent = "❌ فشل في الإضافة: " + e.message;
+        msg.style.color = "red";
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      padding: 2rem;
+      text-align: center;
+    }
+    h2 {
+      color: #000;
+    }
+    form {
+      max-width: 400px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #111;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #message {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>📥 إضافة دعوة جديدة</h2>
+  <form id="form" onsubmit="event.preventDefault(); addInvite();">
+    <input type="text" id="code" placeholder="رقم الدعوة (مثل INV-001)" required>
+    <input type="text" id="eventName" placeholder="اسم الحدث (مثال: زفاف خالد)" required>
+    <select id="status">
+      <option value="pending">قيد الانتظار</option>
+      <option value="scanned">تم الحضور</option>
+      <option value="rejected">مرفوض</option>
+      <option value="unknown">معلق</option>
+    </select>
+    <button type="submit">إضافة الدعوة</button>
+    <div id="message"></div>
+  </form>
+</body>
+</html>
