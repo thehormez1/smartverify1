@@ -21,7 +21,7 @@
     const db = getFirestore(app);
 
     async function uploadInvites() {
-      const total = 400;
+      const total = 50;
       for (let i = 1; i <= total; i++) {
         const code = `INV-${String(i).padStart(3, '0')}`;
         await setDoc(doc(db, "invites", code), {
@@ -31,14 +31,14 @@
         });
         console.log(`✅ تم رفع: ${code}`);
       }
-      alert("✅ تم رفع 400 دعوة بنجاح!");
+      alert("✅ تم رفع 50 دعوة بنجاح!");
     }
 
     window.uploadInvites = uploadInvites;
   </script>
 </head>
 <body style="font-family: Arial; text-align: center; padding: 50px; background-color: #f5f5f5;">
-  <h2>رفع 400 باركود إلى قاعدة البيانات</h2>
+  <h2>رفع 50 باركود إلى قاعدة البيانات</h2>
   <button onclick="uploadInvites()" style="padding: 12px 24px; font-size: 16px; background-color: #1a1a1a; color: white; border: none; border-radius: 8px;">ابدأ الرفع</button>
 </body>
 </html>
