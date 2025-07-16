@@ -1,4 +1,4 @@
-<!-- ✅ كود صفحة مسح الباركود - فعالية زفاف خالد فقط -->
+<!-- ✅ كود صفحة مسح الباركود - زفاف خالد (مربوط بمشروع hormez-inv) -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -9,13 +9,14 @@
     import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import QrScanner from "https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js";
 
+    // 🔐 إعداد Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
-      authDomain: "hormez-invites.firebaseapp.com",
+      apiKey: "AIzaSyBt7eV0k_yTcOgiU8rx5UbvkkeBHduR6ac",
+      authDomain: "hormez-inv.firebaseapp.com",
       projectId: "hormez-inv",
-      storageBucket: "hormez-invites.appspot.com",
-      messagingSenderId: "433719543971",
-      appId: "1:433719543971:web:758146b46c6a26d53b9716"
+      storageBucket: "hormez-inv.firebasestorage.app",
+      messagingSenderId: "747519941805",
+      appId: "1:747519941805:web:468fada2492700e9da3a24"
     };
 
     const app = initializeApp(firebaseConfig);
