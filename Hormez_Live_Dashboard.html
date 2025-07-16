@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>لوحة التحكم - زفاف خالد</title>
+  <meta charset="UTF-8">
+  <title>لوحة تحكم زفاف خالد - Hormez Security</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -19,86 +19,117 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    async function loadData() {
+    async function loadStats() {
       const snapshot = await getDocs(collection(db, "invites"));
-      let total = 0, scanned = 0, rejected = 0, pending = 0;
-      let scannedList = "";
+      let total = 0, accepted = 0, rejected = 0, pending = 0, codes = [];
 
       snapshot.forEach(doc => {
         const data = doc.data();
         if (data.eventName === "زفاف خالد") {
           total++;
-          if (data.status === "yes") {
-            scanned++;
-            scannedList += `<li>${doc.id}</li>`;
-          } else if (data.status === "rejected") {
-            rejected++;
-          } else {
-            pending++;
-          }
+          if (data.status === "yes") accepted++;
+          else if (data.status === "no") rejected++;
+          else pending++;
+
+          if (data.status === "yes") codes.push(doc.id);
         }
       });
 
       document.getElementById("total").textContent = total;
-      document.getElementById("scanned").textContent = scanned;
+      document.getElementById("accepted").textContent = accepted;
       document.getElementById("rejected").textContent = rejected;
       document.getElementById("pending").textContent = pending;
-      document.getElementById("rate").textContent = `${Math.round((scanned / total) * 100)}%`;
-      document.getElementById("scannedList").innerHTML = scannedList;
+      document.getElementById("percent").textContent = total ? ((accepted / total) * 100).toFixed(1) + "%" : "0%";
+
+      const list = document.getElementById("accepted-list");
+      list.innerHTML = "";
+      codes.forEach(code => {
+        const li = document.createElement("li");
+        li.textContent = code;
+        list.appendChild(li);
+      });
     }
 
-    window.onload = loadData;
-    setInterval(loadData, 10000); // تحديث كل 10 ثوانٍ
+    window.onload = () => {
+      loadStats();
+      setInterval(loadStats, 10000);
+    }
   </script>
   <style>
-    body { background: #1a1a1a; color: white; font-family: 'Segoe UI'; padding: 2rem; text-align: center; }
-    h1, h2 { margin-bottom: 1rem; }
-    .box {
-      background: #2b2b2b;
-      padding: 1rem;
-      border-radius: 12px;
-      margin-bottom: 1rem;
-      max-width: 500px;
-      margin-inline: auto;
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 2rem;
+      text-align: center;
     }
-    .box .label { font-size: 1.1rem; margin-bottom: 0.5rem; }
-    .box .value { font-size: 1.8rem; font-weight: bold; }
-    ul { list-style: none; padding: 0; text-align: left; direction: ltr; max-height: 300px; overflow-y: auto; }
-    li { background: #333; margin: 5px 0; padding: 8px; border-radius: 6px; }
+    h1, h2 {
+      color: #FFD700;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .box {
+      background-color: #1e1e1e;
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+    .box h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .box .value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #FFD700;
+    }
+    ul {
+      text-align: right;
+      max-height: 200px;
+      overflow-y: auto;
+      direction: ltr;
+      background: #222;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 2rem;
+    }
+    ul li {
+      padding: 4px 0;
+      border-bottom: 1px solid #444;
+    }
   </style>
 </head>
 <body>
   <h1>Hormez Security</h1>
-  <h2>لوحة التحكم - زفاف خالد</h2>
-
-  <div class="box">
-    <div class="label">إجمالي الدعوات</div>
-    <div class="value" id="total">0</div>
+  <h2>لوحة تحكم إحصائية - زفاف خالد</h2>
+  <div class="grid">
+    <div class="box">
+      <h3>إجمالي الدعوات</h3>
+      <div class="value" id="total">0</div>
+    </div>
+    <div class="box">
+      <h3>تم التحقق</h3>
+      <div class="value" id="accepted">0</div>
+    </div>
+    <div class="box">
+      <h3>مرفوضة</h3>
+      <div class="value" id="rejected">0</div>
+    </div>
+    <div class="box">
+      <h3>قيد الانتظار</h3>
+      <div class="value" id="pending">0</div>
+    </div>
+    <div class="box">
+      <h3>نسبة الحضور</h3>
+      <div class="value" id="percent">0%</div>
+    </div>
   </div>
 
-  <div class="box">
-    <div class="label">تم الحضور</div>
-    <div class="value" id="scanned">0</div>
-  </div>
-
-  <div class="box">
-    <div class="label">دعوات مرفوضة</div>
-    <div class="value" id="rejected">0</div>
-  </div>
-
-  <div class="box">
-    <div class="label">لم يتم الحضور</div>
-    <div class="value" id="pending">0</div>
-  </div>
-
-  <div class="box">
-    <div class="label">نسبة الحضور</div>
-    <div class="value" id="rate">0%</div>
-  </div>
-
-  <div class="box">
-    <div class="label">تفاصيل الدعوات التي حضرت:</div>
-    <ul id="scannedList"></ul>
-  </div>
+  <h2 style="margin-top: 3rem;">أرقام الدعوات التي تم التحقق منها</h2>
+  <ul id="accepted-list"></ul>
 </body>
 </html>
