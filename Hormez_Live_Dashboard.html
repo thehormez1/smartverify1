@@ -1,19 +1,18 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>لوحة تحكم الحضور - Hormez Security</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>لوحة تحكم زفاف خالد - Hormez</title>
   <script type="module">
-    // Import Firebase modules
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
-      authDomain: "hormez-inv.firebaseapp.com",
-      projectId: "hormez-inv",
-      storageBucket: "hormez-inv.appspot.com",
+      authDomain: "hormez-invites.firebaseapp.com",
+      projectId: "hormez-invites",
+      storageBucket: "hormez-invites.appspot.com",
       messagingSenderId: "433719543971",
       appId: "1:433719543971:web:758146b46c6a26d53b9716"
     };
@@ -21,64 +20,53 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    async function loadStats() {
+    async function loadData() {
       const snapshot = await getDocs(collection(db, "invites"));
-      const data = snapshot.docs.map(doc => doc.data());
-
-      const total = data.length;
-      const accepted = data.filter(d => d.Status === "yes").length;
-      const rejected = data.filter(d => d.Status === "no").length;
-      const pending = data.filter(d => !d.Status || d.Status === "pending").length;
-      const attendanceRate = total > 0 ? ((accepted / total) * 100).toFixed(1) + "%" : "0%";
+      let total = 0, accepted = 0, declined = 0, pending = 0;
+      let list = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.eventName !== "زفاف خالد") return;
+        total++;
+        if (data.status === "yes") {
+          accepted++;
+          list += `<li>${doc.id}</li>`;
+        } else if (data.status === "no") {
+          declined++;
+        } else {
+          pending++;
+        }
+      });
 
       document.getElementById("total").textContent = total;
       document.getElementById("accepted").textContent = accepted;
-      document.getElementById("rejected").textContent = rejected;
+      document.getElementById("declined").textContent = declined;
       document.getElementById("pending").textContent = pending;
-      document.getElementById("rate").textContent = attendanceRate;
+      document.getElementById("list").innerHTML = list;
+      document.getElementById("rate").textContent = total ? ((accepted / total) * 100).toFixed(1) + "%" : "0%";
     }
 
-    window.onload = loadStats;
+    loadData();
+    setInterval(loadData, 5000);
   </script>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #121212;
-      color: white;
-      padding: 2rem;
-      text-align: center;
-    }
-    h1 {
-      margin-bottom: 1rem;
-      color: #FFD700;
-    }
-    .stat {
-      background: #1e1e1e;
-      margin: 1rem auto;
-      padding: 1.5rem;
-      border-radius: 12px;
-      max-width: 400px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    }
-    .label {
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-      color: #ccc;
-    }
-    .value {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #FFD700;
-    }
+    body { background: #111; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+    .card { background: #222; margin: 1em auto; padding: 20px; border-radius: 12px; width: 80%; max-width: 600px; }
+    h1, h2 { margin: 10px 0; }
+    ul { text-align: left; max-height: 200px; overflow-y: auto; }
   </style>
 </head>
 <body>
-  <h1>📊 لوحة تحكم الحضور - Hormez</h1>
-
-  <div class="stat"><div class="label">إجمالي الدعوات</div><div class="value" id="total">--</div></div>
-  <div class="stat"><div class="label">الدعوات المقبولة</div><div class="value" id="accepted">--</div></div>
-  <div class="stat"><div class="label">الدعوات المرفوضة</div><div class="value" id="rejected">--</div></div>
-  <div class="stat"><div class="label">الدعوات المعلقة</div><div class="value" id="pending">--</div></div>
-  <div class="stat"><div class="label">نسبة الحضور</div><div class="value" id="rate">--</div></div>
+  <h1>Hormez Security</h1>
+  <h2>لوحة تحكم - زفاف خالد</h2>
+  <div class="card">
+    <p>إجمالي الدعوات: <span id="total">-</span></p>
+    <p>تم الحضور ✅: <span id="accepted">-</span></p>
+    <p>مرفوضة ❌: <span id="declined">-</span></p>
+    <p>معلقة ⏳: <span id="pending">-</span></p>
+    <p>نسبة الحضور: <strong id="rate">-</strong></p>
+    <h3>المدعوون الذين حضروا:</h3>
+    <ul id="list"></ul>
+  </div>
 </body>
 </html>
