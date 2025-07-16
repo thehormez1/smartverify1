@@ -1,4 +1,4 @@
-<!-- ✅ كود صفحة مسح الباركود لجميع الفعاليات باستخدام Firebase -->
+<!-- ✅ نسخة محسّنة من كود ماسح الباركود لجميع الفعاليات -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -25,18 +25,22 @@
     const resultElem = document.getElementById("result");
     const statusElem = document.getElementById("status");
 
+    let isProcessing = false;
+
     const scanner = new QrScanner(videoElem, async result => {
-      scanner.stop();
+      if (isProcessing) return;
+      isProcessing = true;
       await verifyCode(result.data);
     });
 
     scanner.start();
 
     async function verifyCode(code) {
-      resultElem.textContent = `🔍 جاري التحقق من: ${code}`;
+      resultElem.textContent = `🔍 جاري التحقق من الدعوة: ${code}`;
       try {
-        const ref = doc(db, "invites", code);
+        const ref = doc(db, "invites", code.trim());
         const snap = await getDoc(ref);
+
         if (!snap.exists()) {
           statusElem.textContent = "❌ رقم الدعوة غير موجود";
           statusElem.style.color = "red";
@@ -47,7 +51,7 @@
             statusElem.style.color = "orange";
           } else {
             await updateDoc(ref, { status: "yes" });
-            statusElem.textContent = `✅ تم الحضور للفعالية: ${data.eventName}`;
+            statusElem.textContent = `✅ تم الحضور بنجاح\n🎉 الفعالية: ${data.eventName}`;
             statusElem.style.color = "lime";
           }
         }
@@ -59,7 +63,7 @@
       setTimeout(() => {
         resultElem.textContent = "";
         statusElem.textContent = "";
-        scanner.start();
+        isProcessing = false;
       }, 4000);
     }
   </script>
@@ -73,27 +77,30 @@
     }
     h2 {
       color: gold;
+      font-size: 28px;
     }
     video {
       width: 100%;
       max-width: 500px;
       margin-top: 20px;
       border: 4px solid gold;
-      border-radius: 10px;
+      border-radius: 12px;
     }
     #status {
-      font-size: 20px;
+      font-size: 22px;
       margin-top: 20px;
       font-weight: bold;
+      white-space: pre-wrap;
     }
     #result {
-      margin-top: 10px;
-      color: #aaa;
+      margin-top: 12px;
+      color: #ccc;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
-  <h2>Hormez Security - مسح الباركود</h2>
+  <h2>Hormez Security</h2>
   <video id="scanner"></video>
   <div id="status"></div>
   <div id="result"></div>
