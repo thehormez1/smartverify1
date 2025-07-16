@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>لوحة تحكم زفاف خالد - Hormez</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
+      authDomain: "hormez-invites.firebaseapp.com",
+      projectId: "hormez-invites",
+      storageBucket: "hormez-invites.appspot.com",
+      messagingSenderId: "433719543971",
+      appId: "1:433719543971:web:758146b46c6a26d53b9716"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadData() {
+      const snapshot = await getDocs(collection(db, "invites"));
+      let total = 0, accepted = 0, declined = 0, pending = 0;
+      let list = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.eventName !== "زفاف خالد") return;
+        total++;
+        if (data.status === "yes") {
+          accepted++;
+          list += `<li>${doc.id}</li>`;
+        } else if (data.status === "no") {
+          declined++;
+        } else {
+          pending++;
+        }
+      });
+
+      document.getElementById("total").textContent = total;
+      document.getElementById("accepted").textContent = accepted;
+      document.getElementById("declined").textContent = declined;
+      document.getElementById("pending").textContent = pending;
+      document.getElementById("list").innerHTML = list;
+      document.getElementById("rate").textContent = total ? ((accepted / total) * 100).toFixed(1) + "%" : "0%";
+    }
+
+    loadData();
+    setInterval(loadData, 5000);
+  </script>
+  <style>
+    body { background: #111; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+    .card { background: #222; margin: 1em auto; padding: 20px; border-radius: 12px; width: 80%; max-width: 600px; }
+    h1, h2 { margin: 10px 0; }
+    ul { text-align: left; max-height: 200px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <h1>Hormez Security</h1>
+  <h2>لوحة تحكم - زفاف خالد</h2>
+  <div class="card">
+    <p>إجمالي الدعوات: <span id="total">-</span></p>
+    <p>تم الحضور ✅: <span id="accepted">-</span></p>
+    <p>مرفوضة ❌: <span id="declined">-</span></p>
+    <p>معلقة ⏳: <span id="pending">-</span></p>
+    <p>نسبة الحضور: <strong id="rate">-</strong></p>
+    <h3>المدعوون الذين حضروا:</h3>
+    <ul id="list"></ul>
+  </div>
+</body>
+</html>
