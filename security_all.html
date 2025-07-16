@@ -1,4 +1,3 @@
-<!-- ✅ كود صفحة مسح الباركود لجميع الفعاليات باستخدام Firebase -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -26,8 +25,9 @@
     const statusElem = document.getElementById("status");
 
     const scanner = new QrScanner(videoElem, async result => {
+      const code = result.data.trim(); // تنظيف الكود من الفراغات
       scanner.stop();
-      await verifyCode(result.data);
+      await verifyCode(code);
     });
 
     scanner.start();
@@ -37,6 +37,7 @@
       try {
         const ref = doc(db, "invites", code);
         const snap = await getDoc(ref);
+
         if (!snap.exists()) {
           statusElem.textContent = "❌ رقم الدعوة غير موجود";
           statusElem.style.color = "red";
@@ -47,12 +48,12 @@
             statusElem.style.color = "orange";
           } else {
             await updateDoc(ref, { status: "yes" });
-            statusElem.textContent = `✅ تم الحضور للفعالية: ${data.eventName}`;
+            statusElem.textContent = `✅ تم الحضور: ${data.eventName}`;
             statusElem.style.color = "lime";
           }
         }
       } catch (err) {
-        statusElem.textContent = "❌ خطأ في الاتصال بالخادم";
+        statusElem.textContent = "❌ خطأ في الاتصال بـ Firebase";
         statusElem.style.color = "red";
       }
 
@@ -82,7 +83,7 @@
       border-radius: 10px;
     }
     #status {
-      font-size: 20px;
+      font-size: 22px;
       margin-top: 20px;
       font-weight: bold;
     }
