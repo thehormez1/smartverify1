@@ -1,8 +1,9 @@
+<!-- ✅ كود صفحة مسح الباركود - فعالية زفاف خالد فقط -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>مسح الباركود - Hormez Security</title>
+  <title>مسح الباركود - زفاف خالد</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -25,9 +26,8 @@
     const statusElem = document.getElementById("status");
 
     const scanner = new QrScanner(videoElem, async result => {
-      const code = result.data.trim(); // تنظيف الكود من الفراغات
       scanner.stop();
-      await verifyCode(code);
+      await verifyCode(result.data);
     });
 
     scanner.start();
@@ -37,23 +37,25 @@
       try {
         const ref = doc(db, "invites", code);
         const snap = await getDoc(ref);
-
         if (!snap.exists()) {
           statusElem.textContent = "❌ رقم الدعوة غير موجود";
           statusElem.style.color = "red";
         } else {
           const data = snap.data();
-          if (data.status === "yes") {
+          if (data.eventName !== "زفاف خالد") {
+            statusElem.textContent = "⚠️ هذه الدعوة لا تخص زفاف خالد";
+            statusElem.style.color = "orange";
+          } else if (data.status === "yes") {
             statusElem.textContent = "⚠️ تم استخدام الدعوة مسبقًا";
             statusElem.style.color = "orange";
           } else {
             await updateDoc(ref, { status: "yes" });
-            statusElem.textContent = `✅ تم الحضور: ${data.eventName}`;
+            statusElem.textContent = `✅ تم الحضور للفعالية: ${data.eventName}`;
             statusElem.style.color = "lime";
           }
         }
       } catch (err) {
-        statusElem.textContent = "❌ خطأ في الاتصال بـ Firebase";
+        statusElem.textContent = "❌ خطأ في الاتصال بالخادم";
         statusElem.style.color = "red";
       }
 
@@ -75,6 +77,12 @@
     h2 {
       color: gold;
     }
+    .event-label {
+      font-size: 20px;
+      margin-top: -10px;
+      margin-bottom: 20px;
+      color: #ccc;
+    }
     video {
       width: 100%;
       max-width: 500px;
@@ -83,7 +91,7 @@
       border-radius: 10px;
     }
     #status {
-      font-size: 22px;
+      font-size: 20px;
       margin-top: 20px;
       font-weight: bold;
     }
@@ -95,6 +103,7 @@
 </head>
 <body>
   <h2>Hormez Security - مسح الباركود</h2>
+  <div class="event-label">فعالية: زفاف خالد</div>
   <video id="scanner"></video>
   <div id="status"></div>
   <div id="result"></div>
