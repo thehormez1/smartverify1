@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>رفع أكواد معرض أبوظبي</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
+      authDomain: "hormez-invites.firebaseapp.com",
+      projectId: "hormez-inv",
+      storageBucket: "hormez-invites.appspot.com",
+      messagingSenderId: "433719543971",
+      appId: "1:433719543971:web:758146b46c6a26d53b9716"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function uploadExpoInvites() {
+      for (let i = 1; i <= 10; i++) {
+        const code = `EXPO-${String(i).padStart(3, '0')}`;
+        await setDoc(doc(db, "invites", code), {
+          status: "pending",
+          eventName: "معرض أبوظبي"
+        });
+        console.log(`✅ تم رفع: ${code}`);
+      }
+      alert("✅ تم رفع 10 دعوات لمعرض أبوظبي بنجاح!");
+    }
+
+    window.uploadExpoInvites = uploadExpoInvites;
+  </script>
+</head>
+<body style="font-family: Arial; text-align: center; padding: 40px;">
+  <h2>رفع أكواد معرض أبوظبي إلى Firebase</h2>
+  <button onclick="uploadExpoInvites()" style="padding: 12px 24px; font-size: 16px;">ابدأ الرفع</button>
+</body>
+</html>
