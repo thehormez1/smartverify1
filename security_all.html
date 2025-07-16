@@ -1,4 +1,4 @@
-<!-- ✅ كود صفحة مسح الباركود - زفاف خالد (مربوط بمشروع hormez-inv) -->
+<!-- ✅ كود صفحة مسح الباركود - فعالية زفاف خالد فقط -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -9,7 +9,6 @@
     import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import QrScanner from "https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js";
 
-    // 🔐 إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBt7eV0k_yTcOgiU8rx5UbvkkeBHduR6ac",
       authDomain: "hormez-inv.firebaseapp.com",
@@ -31,7 +30,10 @@
       await verifyCode(result.data);
     });
 
-    scanner.start();
+    scanner.start().catch(e => {
+      statusElem.textContent = "❌ فشل تشغيل الكاميرا";
+      statusElem.style.color = "red";
+    });
 
     async function verifyCode(code) {
       resultElem.textContent = `🔍 جاري التحقق من: ${code}`;
@@ -84,12 +86,18 @@
       margin-bottom: 20px;
       color: #ccc;
     }
-    video {
+    .scanner-wrapper {
       width: 100%;
       max-width: 500px;
-      margin-top: 20px;
+      margin: 0 auto;
       border: 4px solid gold;
       border-radius: 10px;
+      overflow: hidden;
+    }
+    video {
+      width: 100%;
+      height: 400px;
+      object-fit: cover;
     }
     #status {
       font-size: 20px;
@@ -105,7 +113,9 @@
 <body>
   <h2>Hormez Security - مسح الباركود</h2>
   <div class="event-label">فعالية: زفاف خالد</div>
-  <video id="scanner"></video>
+  <div class="scanner-wrapper">
+    <video id="scanner" muted playsinline></video>
+  </div>
   <div id="status"></div>
   <div id="result"></div>
 </body>
