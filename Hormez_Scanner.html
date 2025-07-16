@@ -1,3 +1,4 @@
+<!-- ✅ النسخة المحسّنة: صفحة مسح الباركود وربطها مع Firebase -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -20,58 +21,96 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const reader = new Html5Qrcode("reader");
-    const config = { fps: 10, qrbox: 250 };
-
     const result = document.getElementById("result");
+    const scanner = new Html5Qrcode("reader");
+    const config = { fps: 15, qrbox: 250 };
 
-    function reset() {
+    function resetScanner() {
       result.textContent = "📷 الرجاء مسح الباركود";
       result.className = "";
-      reader.resume();
+      scanner.resume();
     }
 
-    function show(msg, type) {
-      result.textContent = msg;
+    function showMessage(message, type) {
+      result.textContent = message;
       result.className = type;
-      setTimeout(reset, 3000);
+      setTimeout(resetScanner, 3000);
     }
 
     async function onScanSuccess(decodedText) {
-      reader.pause();
-      const url = new URL(decodedText);
-      const code = url.searchParams.get("code");
+      scanner.pause();
+      let code = "";
+      try {
+        const url = new URL(decodedText);
+        code = url.searchParams.get("code") || decodedText;
+      } catch {
+        code = decodedText;
+      }
 
-      if (!code || !code.startsWith("INV-")) return show("❌ رمز غير صالح", "error");
+      if (!code.startsWith("INV-")) return showMessage("❌ رمز غير صالح", "error");
 
       const ref = doc(db, "invites", code);
       const snap = await getDoc(ref);
 
-      if (!snap.exists()) return show("❌ رقم الدعوة غير موجود", "error");
-
+      if (!snap.exists()) return showMessage("❌ رقم الدعوة غير موجود", "error");
       const data = snap.data();
+
       if (data.status === "yes") {
-        show("⚠️ تم استخدام هذه الدعوة مسبقًا", "error");
-      } else if (data.eventName !== "زفاف خالد") {
-        show("❌ غير مخصص لهذا الحدث", "error");
+        showMessage("⚠️ تم استخدام هذه الدعوة مسبقًا", "error");
       } else {
         await updateDoc(ref, { status: "yes" });
-        show("✅ تم التحقق من الدعوة بنجاح", "success");
+        showMessage("✅ تم التحقق من الدعوة بنجاح", "success");
       }
     }
 
-    reader.start({ facingMode: "environment" }, config, onScanSuccess);
+    Html5Qrcode.getCameras().then(cameras => {
+      if (cameras && cameras.length) {
+        scanner.start(
+          { deviceId: { exact: cameras[0].id } },
+          config,
+          onScanSuccess
+        ).catch(err => {
+          result.textContent = "⚠️ لا يمكن تشغيل الكاميرا";
+        });
+      } else {
+        result.textContent = "⚠️ لم يتم العثور على كاميرا";
+      }
+    });
   </script>
   <style>
-    body { background: #111; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-    #reader { width: 300px; margin: auto; background: #222; padding: 10px; border-radius: 12px; }
-    #result { margin-top: 20px; font-size: 1.2em; padding: 10px; border-radius: 8px; }
-    .success { background-color: #d4edda; color: #155724; }
-    .error { background-color: #f8d7da; color: #721c24; }
+    body {
+      background: #111;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    #reader {
+      margin: auto;
+      width: 320px;
+      max-width: 90vw;
+      background: #222;
+      padding: 10px;
+      border-radius: 12px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 1.2em;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
   </style>
 </head>
 <body>
-  <h2>شركة Hormez Security</h2>
+  <h2>Hormez Security</h2>
   <h3>زفاف خالد</h3>
   <div id="reader"></div>
   <div id="result">📷 الرجاء مسح الباركود</div>
