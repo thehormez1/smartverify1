@@ -1,4 +1,4 @@
-<!-- ✅ النسخة المحسّنة: صفحة مسح الباركود وربطها مع Firebase -->
+<!-- ✅ النسخة المحسّنة لواجهة مسح الباركود الخاصة بزفاف خالد - Hormez Security -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -12,7 +12,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyCLxeov04x7oUjQpfVs5LyUWSFYtYdxMcg",
       authDomain: "hormez-invites.firebaseapp.com",
-      projectId: "hormez-invites",
+      projectId: "hormez-inv",
       storageBucket: "hormez-invites.appspot.com",
       messagingSenderId: "433719543971",
       appId: "1:433719543971:web:758146b46c6a26d53b9716"
@@ -23,7 +23,7 @@
 
     const result = document.getElementById("result");
     const scanner = new Html5Qrcode("reader");
-    const config = { fps: 15, qrbox: 250 };
+    const config = { fps: 20, qrbox: 280 };
 
     function resetScanner() {
       result.textContent = "📷 الرجاء مسح الباركود";
@@ -53,8 +53,8 @@
       const snap = await getDoc(ref);
 
       if (!snap.exists()) return showMessage("❌ رقم الدعوة غير موجود", "error");
-      const data = snap.data();
 
+      const data = snap.data();
       if (data.status === "yes") {
         showMessage("⚠️ تم استخدام هذه الدعوة مسبقًا", "error");
       } else {
@@ -87,17 +87,18 @@
     }
     #reader {
       margin: auto;
-      width: 320px;
-      max-width: 90vw;
+      width: 340px;
+      max-width: 100vw;
       background: #222;
       padding: 10px;
       border-radius: 12px;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
     }
     #result {
       margin-top: 20px;
-      font-size: 1.2em;
-      padding: 10px;
-      border-radius: 8px;
+      font-size: 1.3em;
+      padding: 12px;
+      border-radius: 10px;
     }
     .success {
       background-color: #d4edda;
@@ -106,6 +107,17 @@
     .error {
       background-color: #f8d7da;
       color: #721c24;
+    }
+    h2 {
+      font-size: 28px;
+      color: gold;
+      margin-bottom: 0;
+    }
+    h3 {
+      font-size: 22px;
+      color: #ccc;
+      margin-top: 5px;
+      margin-bottom: 25px;
     }
   </style>
 </head>
